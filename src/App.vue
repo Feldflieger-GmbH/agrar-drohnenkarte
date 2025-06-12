@@ -41,6 +41,7 @@
       <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col">
         <!-- Hier ist Platz für Legende, Upload, Koordinaten etc. -->
         <h2 class="font-bold mb-2">Infos</h2>
+        <h3 class="font-bold mb-2">KML-Import</h3>
 
         <div v-if="featureInfo.length" class="mb-4">
           <h4 class="font-bold mb-2">Objekte an dieser Stelle:</h4>
