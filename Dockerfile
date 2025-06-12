@@ -6,7 +6,7 @@ COPY tailwind.config.* ./
 COPY postcss.config.* ./
 COPY tsconfig.* ./
 COPY . .
-RUN npm ci
+RUN npm install
 RUN npm run build
 
 # Production stage

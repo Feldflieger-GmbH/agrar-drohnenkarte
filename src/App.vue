@@ -2,7 +2,7 @@
   <div class="flex flex-col min-h-screen">
     <!-- Header -->
     <header class="bg-blue-900 text-white px-6 py-4 text-2xl font-bold shadow">
-      Mein Geo-Viewer
+      Agrar-Drohnenkarte
     </header>
 
     <!-- Drei-Spalten-Layout -->
