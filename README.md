@@ -1,5 +1,16 @@
-# Vue 3 + TypeScript + Vite
+# Agrar Drohnenkarte
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Die Applikation erlaubt es KML, SHP und ähnliche Dateien einzulesen.
+Die Polygone / Felder Werden auf der Karte mit Dipul-Overlay angezeigt.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+Dies ist ein Vue 3 + Vite + Tailwind CSS Projekt, das einen interaktiven Kartenviewer mit DIPUL WMS-Layern bietet.  
+Alle Layer können ein- und ausgeschaltet werden, der Basemap-Switcher wechselt zwischen OSM und Satellitenkarte.  
+GetFeatureInfo liefert Details beim Klick auf die Karte.
+
+## Features
+
+- Anzeige von DIPUL-WMS-Layern (alle Layer kombinierbar, ein Request pro Kachel)
+- Basemap-Wechsel (OpenStreetMap/Satellit)
+- Responsive 3-Spalten-Layout mit Tailwind CSS
+- GetFeatureInfo (Objektinfos per Kartenklick, JSON-Ausgabe)
+- Docker-Deployment für Produktion
