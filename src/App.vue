@@ -42,6 +42,16 @@
         <!-- Hier ist Platz für Legende, Upload, Koordinaten etc. -->
         <h2 class="font-bold mb-2">Infos</h2>
         <h3 class="font-bold mb-2">KML-Import</h3>
+        <div class="mb-4">
+          <label class="block font-semibold mb-2">KML-Datei anzeigen:</label>
+          <input
+              type="file"
+              accept=".kml"
+              @change="handleKmlUpload"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+        </div>
+
 
         <div v-if="featureInfo.length" class="mb-4">
           <h4 class="font-bold mb-2">Objekte an dieser Stelle:</h4>
@@ -71,6 +81,15 @@ import View from 'ol/View'
 import TileLayer from 'ol/layer/Tile'
 import XYZ from 'ol/source/XYZ'
 import TileWMS from 'ol/source/TileWMS'
+import VectorLayer from 'ol/layer/Vector'
+import VectorSource from 'ol/source/Vector'
+import KML from 'ol/format/KML'
+
+import Style from 'ol/style/Style'
+import Stroke from 'ol/style/Stroke'
+import Fill from 'ol/style/Fill'
+import Icon from 'ol/style/Icon'
+import CircleStyle from 'ol/style/Circle'
 
 const DIPUL_WMS_URL = 'https://uas-betrieb.de/geoservices/dipul/wms'
 
@@ -109,7 +128,8 @@ const dipulLayers = [
   { name: "Modellflugplätze", wmsName: "dipul:modellflugplaetze" },
 ];
 
-const infoContent = ref(''); // Zum Anzeigen im Template (Sidebar oder Popup)
+
+const kmlLayer = ref(null)
 const activeLayers = ref(dipulLayers.map(layer => layer.wmsName))
 let dipulWmsLayer = null;
 
@@ -171,11 +191,105 @@ onMounted(() => {
 
 
   // Click-Listener für GetFeatureInfo
+  map.on('click', function(evt) {
+    console.log('click')
+    getFeatureInfo(evt.coordinate, evt);
+  });
+  // Click-Listener für GetFeatureInfo
   map.on('singleclick', function(evt) {
+    console.log('singleclick')
     getFeatureInfo(evt.coordinate, evt);
   });
 })
 
+function handleKmlUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = function(e) {
+    const kmlText = e.target.result
+    // Entferne alten KML-Layer, falls vorhanden
+    if (kmlLayer.value) {
+      map.removeLayer(kmlLayer.value)
+      kmlLayer.value = null
+    }
+    const kmlFormat = new KML({ extractStyles: false })
+    // Erzeuge neuen KML-Layer
+    kmlLayer.value = new VectorLayer({
+      source: new VectorSource({
+        features: kmlFormat.readFeatures(kmlText, {
+          featureProjection: 'EPSG:3857'
+        })
+      }),
+      style: kmlStyle           // <- will now be called
+    })
+
+    map.addLayer(kmlLayer.value)
+
+    // Optional: Zoom auf die KML-Geometrie
+    const extent = kmlLayer.value.getSource().getExtent()
+    if (extent && extent[0] !== Infinity) {
+      map.getView().fit(extent, { duration: 800, maxZoom: 14 })
+    }
+  }
+  reader.readAsText(file)
+}
+
+function kmlStyle(feature) {
+  // Beispiel: Verschiedene Geometrie-Typen unterschiedlich darstellen
+  if (feature.getGeometry().getType() === 'Point') {
+    // Optional: Icon aus dem KML verwenden, falls vorhanden
+    const iconHref = feature.getStyle() && feature.getStyle().getImage() && feature.getStyle().getImage().getSrc();
+    if (iconHref) {
+      return new Style({
+        image: new Icon({
+          src: iconHref,
+          scale: 1.2,
+        }),
+      });
+    }
+    // Fallback: Einfacher Kreis
+    return new Style({
+      image: new CircleStyle({
+        radius: 7,
+        fill: new Fill({ color: '#1e40af' }),
+        stroke: new Stroke({ color: '#fff', width: 2 }),
+      }),
+    })
+  }
+  // Linien (z.B. Tracks)
+  if (feature.getGeometry().getType() === 'LineString') {
+    return new Style({
+      stroke: new Stroke({
+        color: '#eab308', // gelb
+        width: 3,
+      }),
+    })
+  }
+  // Flächen (z.B. Polygone)
+  if (feature.getGeometry().getType() === 'Polygon') {
+    return new Style({
+      stroke: new Stroke({
+        color: '#2563eb', // blau
+        width: 2,
+      }),
+      fill: new Fill({
+        color: 'rgba(37, 99, 235, 0.2)',
+      }),
+    })
+  }
+  // Standard-Fallback
+  return new Style({
+    stroke: new Stroke({
+      color: '#a21caf', // violett
+      width: 2,
+    }),
+    fill: new Fill({
+      color: 'rgba(162, 28, 175, 0.1)',
+    }),
+  })
+}
 
 function changeBasemap() {
   if (currentBaseLayer) {
@@ -206,15 +320,23 @@ function getFeatureInfo(coordinate, evt) {
         'feature_count': 100
       }
   );
-  if (url) {
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          featureInfo.value = data.features || [];
-        });
-  } else {
-    featureInfo.value = [];
+
+  if (!url) {
+    featureInfo.value = []
+    return
   }
+
+
+
+  fetch(url)
+      .then(r => r.json())                // <-- check console if this throws
+      .then(json => {
+        // GeoServer / MapServer returns a FeatureCollection:
+        // { "type":"FeatureCollection", "features":[ … ] }
+        featureInfo.value = json.features ?? []
+      })
+
+
 }
 
 watch(activeLayers, (newVal) => {
