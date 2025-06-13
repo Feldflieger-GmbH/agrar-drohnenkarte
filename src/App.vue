@@ -50,6 +50,15 @@
               @change="handleShpUpload"
               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
           />
+
+          <button
+              type="button"
+              v-if="shapefileLayer"
+              @click="removeShapefileLayer"
+              class="mb-4 w-full px-3 py-2 rounded bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition"
+          >
+            Shape-Layer entfernen
+          </button>
         </div>
 
 
@@ -61,6 +70,14 @@
               @change="handleKmlUpload"
               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
+          <button
+              type="button"
+              v-if="kmlLayer"
+              @click="removeKmlLayer"
+              class="mt-2 mb-4 w-full px-3 py-2 rounded bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 transition"
+          >
+            KML-Layer entfernen
+          </button>
         </div>
 
 
@@ -227,15 +244,47 @@ const lineStyle= new Style({
     width: 3,
   }),
 })
-const polygonStyle = new Style({
-  stroke: new Stroke({
-    color: '#2563eb', // blau
-    width: 2,
-  }),
-  fill: new Fill({
-    color: 'rgba(37, 99, 235, 0.2)',
-  }),
-})
+
+function removeKmlLayer() {
+  if (kmlLayer.value) {
+    map.removeLayer(kmlLayer.value)
+    kmlLayer.value = null
+  }
+}
+
+function removeShapefileLayer() {
+  if (shapefileLayer.value) {
+    map.removeLayer(shapefileLayer.value)
+    shapefileLayer.value = null
+  }
+}
+
+
+function polygonStyle(feature) {
+  const props = feature.getProperties()
+  const polyName = props.name || props.NAME || props.Name || props.FLUR || props.BEZEICHNUNG || '' // Holt das <Name>-Element
+
+  return new Style({
+    stroke: new Stroke({
+      color: '#2563eb', // blau
+      width: 2,
+
+    }),
+    fill: new Fill({
+      color: 'rgba(37, 99, 235, 0.2)',
+    }),
+    text: polyName // oder ein anderes Feld
+        ? new Text({
+          text: polyName, // DBF-Feldname!
+          font: 'bold 14px Arial, sans-serif',
+          fill: new Fill({ color: '#0891b2' }),
+          stroke: new Stroke({ color: '#fff', width: 3 }),
+          overflow: true,
+        })
+        : undefined,
+  })
+}
+
 
 
 function polygonInnerStyle(coords) { return new Style({
@@ -292,9 +341,9 @@ function handleShpUpload(event) {
             const coords = feature.getGeometry().getCoordinates()
             const styles = []
 
-            styles.push( polygonStyle)
+            styles.push( polygonStyle(feature) )
             for (let i = 1; i < coords.length; ++i) {
-              styles.push(polygonInnerStyle  (coords[i])            )
+              styles.push(polygonInnerStyle  (coords[i]))
             }
             return styles
           }
@@ -395,11 +444,11 @@ function kmlStyle(feature) {
     const styles = []
 
     // 1. Außenring: blau gefüllt
-    styles.push( polygonStyle    )
+    styles.push( polygonStyle(feature)    )
 
     // 2. Alle Innenringe (Löcher): separat, z. B. rot umranden, weiß füllen
     for (let i = 1; i < coords.length; ++i) {
-      styles.push(          polygonInnerStyle(coords[i])      )
+      styles.push(polygonInnerStyle(coords[i]))
     }
     return styles
   }
