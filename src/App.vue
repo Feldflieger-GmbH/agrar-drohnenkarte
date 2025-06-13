@@ -221,6 +221,34 @@ onMounted(() => {
 })
 
 
+const lineStyle= new Style({
+  stroke: new Stroke({
+    color: '#22d3ee',
+    width: 3,
+  }),
+})
+const polygonStyle = new Style({
+  stroke: new Stroke({
+    color: '#2563eb', // blau
+    width: 2,
+  }),
+  fill: new Fill({
+    color: 'rgba(37, 99, 235, 0.2)',
+  }),
+})
+
+
+function polygonInnerStyle(coords) { return new Style({
+  stroke: new Stroke({ color: '#dc2626', width: 2, lineDash: [4,4] }),
+  fill: new Fill({ color: 'rgba(255,255,255,0.8)' }),
+  geometry: new Polygon([coords]), // Nur Innenring
+})}
+
+const circleStyle = new CircleStyle({
+  radius: 6,
+  fill: new Fill({ color: '#db2777' }),
+  stroke: new Stroke({ color: '#fff', width: 2 })
+})
 
 function handleShpUpload(event) {
   const file = event.target.files[0]
@@ -232,27 +260,6 @@ function handleShpUpload(event) {
     return
   }
 
-  const lineStyle= new Style({
-    stroke: new Stroke({
-      color: '#22d3ee',
-      width: 3,
-    }),
-  })
-  const polygonStyle = new Style({
-    stroke: new Stroke({
-      color: '#2563eb', // blau
-      width: 2,
-    }),
-    fill: new Fill({
-      color: 'rgba(37, 99, 235, 0.2)',
-    }),
-  })
-
-  const circleStyle = new CircleStyle({
-    radius: 6,
-    fill: new Fill({ color: '#db2777' }),
-    stroke: new Stroke({ color: '#fff', width: 2 })
-  })
 
   const reader = new FileReader()
   reader.onload = function(e) {
@@ -282,7 +289,14 @@ function handleShpUpload(event) {
             return lineStyle
           }
           if (feature.getGeometry().getType() === 'Polygon') {
-            return polygonStyle
+            const coords = feature.getGeometry().getCoordinates()
+            const styles = []
+
+            styles.push( polygonStyle)
+            for (let i = 1; i < coords.length; ++i) {
+              styles.push(polygonInnerStyle  (coords[i])            )
+            }
+            return styles
           }
         }
       })
@@ -381,57 +395,13 @@ function kmlStyle(feature) {
     const styles = []
 
     // 1. Außenring: blau gefüllt
-    styles.push(
-        new Style({
-          stroke: new Stroke({ color: '#2563eb', width: 2 }),
-          fill: new Fill({ color: 'rgba(37,99,235,0.2)' }),
-          text: PolyName
-              ? new Text({
-                text: PolyName,
-                font: 'bold 14px Arial, sans-serif',
-                fill: new Fill({ color: '#2563eb' }),
-                stroke: new Stroke({ color: '#fff', width: 3 }),
-                overflow: true,
-              })
-              : undefined,
-          geometry: new Polygon([coords[0]]), // Nur Außenring
-        })
-    )
+    styles.push( polygonStyle    )
 
     // 2. Alle Innenringe (Löcher): separat, z. B. rot umranden, weiß füllen
     for (let i = 1; i < coords.length; ++i) {
-      styles.push(
-          new Style({
-            stroke: new Stroke({ color: '#dc2626', width: 2, lineDash: [4,4] }),
-            fill: new Fill({ color: 'rgba(255,255,255,0.8)' }),
-            geometry: new Polygon([coords[i]]), // Nur Innenring
-          })
-      )
+      styles.push(          polygonInnerStyle(coords[i])      )
     }
     return styles
-
-
-
-
-    return new Style({
-      stroke: new Stroke({
-        color: '#2563eb', // blau
-        width: 2,
-      }),
-      fill: new Fill({
-        color: 'rgba(37, 99, 235, 0.2)',
-      }),
-
-      text: PolyName
-          ? new Text({
-            text: PolyName,
-            font: 'bold 14px Arial, sans-serif',
-            fill: new Fill({ color: '#2563eb' }),
-            stroke: new Stroke({ color: '#fff', width: 3 }),
-            overflow: true,
-          })
-          : undefined,
-    })
   }
   // Standard-Fallback
   return new Style({
