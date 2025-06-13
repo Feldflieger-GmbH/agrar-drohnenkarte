@@ -41,9 +41,20 @@
       <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col">
         <!-- Hier ist Platz für Legende, Upload, Koordinaten etc. -->
         <h2 class="font-bold mb-2">Infos</h2>
+        <h3 class="font-bold mb-2">SHP-Import (ZIP)</h3>
+
+        <div class="mb-4">
+          <input
+              type="file"
+              accept=".zip"
+              @change="handleShpUpload"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+          />
+        </div>
+
+
         <h3 class="font-bold mb-2">KML-Import</h3>
         <div class="mb-4">
-          <label class="block font-semibold mb-2">KML-Datei anzeigen:</label>
           <input
               type="file"
               accept=".kml"
@@ -84,6 +95,11 @@ import TileWMS from 'ol/source/TileWMS'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import KML from 'ol/format/KML'
+
+
+import shp from 'shpjs'
+import GeoJSON from 'ol/format/GeoJSON'
+
 
 import Style from 'ol/style/Style'
 import Stroke from 'ol/style/Stroke'
@@ -129,6 +145,7 @@ const dipulLayers = [
 ];
 
 
+const shapefileLayer = ref(null)
 const kmlLayer = ref(null)
 const activeLayers = ref(dipulLayers.map(layer => layer.wmsName))
 let dipulWmsLayer = null;
@@ -201,6 +218,89 @@ onMounted(() => {
     getFeatureInfo(evt.coordinate, evt);
   });
 })
+
+
+
+function handleShpUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // Muss eine ZIP sein!
+  if (!file.name.endsWith('.zip')) {
+    alert('Bitte eine Shape-Datei als ZIP-Archiv hochladen.')
+    return
+  }
+
+  const lineStyle= new Style({
+    stroke: new Stroke({
+      color: '#22d3ee',
+      width: 3,
+    }),
+  })
+  const polygonStyle = new Style({
+    stroke: new Stroke({
+      color: '#2563eb', // blau
+      width: 2,
+    }),
+    fill: new Fill({
+      color: 'rgba(37, 99, 235, 0.2)',
+    }),
+  })
+
+  const circleStyle = new CircleStyle({
+    radius: 6,
+    fill: new Fill({ color: '#db2777' }),
+    stroke: new Stroke({ color: '#fff', width: 2 })
+  })
+
+  const reader = new FileReader()
+  reader.onload = function(e) {
+    const arrayBuffer = e.target.result
+
+    shp(arrayBuffer).then(geojson => {
+      // geojson ist ein FeatureCollection-Objekt
+      const features = new GeoJSON().readFeatures(geojson, {
+        featureProjection: 'EPSG:3857',
+      })
+
+      // Alten Layer ggf. entfernen
+      if (shapefileLayer.value) {
+        map.removeLayer(shapefileLayer.value)
+      }
+
+      // Layer mit einfachem Style
+      shapefileLayer.value = new VectorLayer({
+        source: new VectorSource({ features }),
+        style: (feature) => {
+          if (feature.getGeometry().getType() === 'Point') {
+            return new Style({
+              image: circleStyle
+            })
+          }
+          if (feature.getGeometry().getType() === 'LineString') {
+            return lineStyle
+          }
+          if (feature.getGeometry().getType() === 'Polygon') {
+            return polygonStyle
+          }
+        }
+      })
+
+      map.addLayer(shapefileLayer.value)
+
+      // Zoom auf die Shape-Features
+      const extent = shapefileLayer.value.getSource().getExtent()
+      if (extent && extent[0] !== Infinity) {
+        map.getView().fit(extent, { duration: 800, maxZoom: 14 })
+      }
+    })
+        .catch(err => {
+          alert('Fehler beim Lesen der Shape-Datei: ' + err)
+        })
+  }
+  reader.readAsArrayBuffer(file)
+}
+
 
 function handleKmlUpload(event) {
   const file = event.target.files[0]
