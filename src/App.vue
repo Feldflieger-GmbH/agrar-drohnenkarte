@@ -38,99 +38,99 @@
       </main>
 
       <!-- Rechte Sidebar -->
-      <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col">
+      <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-64px)]">
         <div class="flex-1 overflow-y-auto">
-        <!-- Hier ist Platz für Legende, Upload, Koordinaten etc. -->
-        <h2 class="font-bold mb-2">Infos</h2>
-        <h3 class="font-bold mb-2">SHP-Import (ZIP)</h3>
 
-        <div class="mb-4">
-          <input
-              type="file"
-              accept=".zip"
-              @change="handleShpUpload"
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
-          />
+          <h2 class="font-bold mb-2">Infos</h2>
 
-          <button
-              type="button"
-              v-if="shapefileLayer"
-              @click="removeShapefileLayer"
-              class="mb-4 w-full px-3 py-2 rounded bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition"
-          >
-            Shape-Layer entfernen
-          </button>
-        </div>
+          <h3 class="font-bold mb-2">SHP-Import (ZIP)</h3>
+          <div class="mb-4">
+            <input
+                type="file"
+                accept=".zip"
+                @change="handleShpUpload"
+                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+            />
 
-
-        <h3 class="font-bold mb-2">KML-Import</h3>
-        <div class="mb-4">
-          <input
-              type="file"
-              accept=".kml"
-              @change="handleKmlUpload"
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-          <button
-              type="button"
-              v-if="kmlLayer"
-              @click="removeKmlLayer"
-              class="mt-2 mb-4 w-full px-3 py-2 rounded bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 transition"
-          >
-            KML-Layer entfernen
-          </button>
-        </div>
+            <button
+                type="button"
+                v-if="shapefileLayer"
+                @click="removeShapefileLayer"
+                class="mb-4 w-full px-3 py-2 rounded bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition"
+            >
+              Shape-Layer entfernen
+            </button>
+          </div>
 
 
-        <div v-if="featureInfo.length" class="mb-4">
-          <h4 class="font-bold mb-2">Objekte an dieser Stelle:</h4>
+          <h3 class="font-bold mb-2">KML-Import</h3>
+          <div class="mb-4">
+            <input
+                type="file"
+                accept=".kml"
+                @change="handleKmlUpload"
+                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            <button
+                type="button"
+                v-if="kmlLayer"
+                @click="removeKmlLayer"
+                class="mt-2 mb-4 w-full px-3 py-2 rounded bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 transition"
+            >
+              KML-Layer entfernen
+            </button>
+          </div>
 
-          <div v-for="f in featureInfo" :key="f.id" class="border rounded p-2">
-            <p class="font-bold text-xl">{{ f.properties.type_code }}</p>
-            <div v-for="(v, k) in f.properties" :key="k">
-              <span class="font-semibold">{{ k }}:</span> {{ v || '-' }}
+
+          <div v-if="featureInfo.length" class="mb-4">
+            <h4 class="font-bold mb-2">Objekte an dieser Stelle:</h4>
+
+            <div v-for="f in featureInfo" :key="f.id" class="border rounded p-2">
+              <p class="font-bold text-xl">{{ f.properties.type_code }}</p>
+              <div v-for="(v, k) in f.properties" :key="k">
+                <span class="font-semibold">{{ k }}:</span> {{ v || '-' }}
+              </div>
+            </div>
+
+          </div>
+
+          <div v-if="allPolygonFeatures.length" class="mb-4">
+            <h4 class="font-bold mb-2">Flächen auf der Karte</h4>
+            <ul class="space-y-2">
+              <li
+                  v-for="(f, i) in allPolygonFeatures"
+                  :key="f.getId() || i"
+                  class="border rounded p-2 bg-white shadow"
+              >
+                <div>
+                  <span class="font-semibold">Name:</span>
+                  {{ f.get('name') || f.get('NAME') || f.get('bez') || '-' }}
+                </div>
+                <div>
+                  <span class="font-semibold">Fläche:</span>
+                  {{
+                    (
+                        (getArea(f.getGeometry(), { projection: 'EPSG:3857' }) / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
+                    )
+                  }}
+                </div>
+              </li>
+            </ul>
+            <div class="font-bold mt-4">
+              Gesamtfläche:&nbsp;
+              {{
+                (() => {
+                  const sum = allPolygonFeatures.reduce(
+                      (acc, f) => acc + getArea(f.getGeometry(), { projection: 'EPSG:3857' }), 0
+                  )
+                  return (sum / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
+                })()
+              }}
             </div>
           </div>
-
-        </div>
-
-        <div v-if="allPolygonFeatures.length" class="mb-4">
-          <h4 class="font-bold mb-2">Polygone auf der Karte</h4>
-          <ul class="space-y-2">
-            <li
-                v-for="(f, i) in allPolygonFeatures"
-                :key="f.getId() || i"
-                class="border rounded p-2 bg-white shadow"
-            >
-              <div>
-                <span class="font-semibold">Name:</span>
-                {{ f.get('name') || f.get('NAME') || f.get('bez') || '-' }}
-              </div>
-              <div>
-                <span class="font-semibold">Fläche:</span>
-                {{
-                  (
-                      (getArea(f.getGeometry(), { projection: 'EPSG:3857' }) / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
-                  )
-                }}
-              </div>
-            </li>
-          </ul>
-          <div class="font-bold mt-4">
-            Gesamtfläche:&nbsp;
-            {{
-              (() => {
-                const sum = allPolygonFeatures.reduce(
-                    (acc, f) => acc + getArea(f.getGeometry(), { projection: 'EPSG:3857' }), 0
-                )
-                return (sum / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
-              })()
-            }}
+          <div v-else class="text-gray-400 italic">
+            (Keine Flächen geladen)
           </div>
-        </div>
-        <div v-else class="text-gray-400 italic">
-          (Keine Polygone geladen)
-        </div>
         </div>
 
       </aside>
