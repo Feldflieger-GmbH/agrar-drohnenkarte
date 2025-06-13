@@ -39,6 +39,7 @@
 
       <!-- Rechte Sidebar -->
       <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col">
+        <div class="flex-1 overflow-y-auto">
         <!-- Hier ist Platz für Legende, Upload, Koordinaten etc. -->
         <h2 class="font-bold mb-2">Infos</h2>
         <h3 class="font-bold mb-2">SHP-Import (ZIP)</h3>
@@ -93,6 +94,44 @@
 
         </div>
 
+        <div v-if="allPolygonFeatures.length" class="mb-4">
+          <h4 class="font-bold mb-2">Polygone auf der Karte</h4>
+          <ul class="space-y-2">
+            <li
+                v-for="(f, i) in allPolygonFeatures"
+                :key="f.getId() || i"
+                class="border rounded p-2 bg-white shadow"
+            >
+              <div>
+                <span class="font-semibold">Name:</span>
+                {{ f.get('name') || f.get('NAME') || f.get('bez') || '-' }}
+              </div>
+              <div>
+                <span class="font-semibold">Fläche:</span>
+                {{
+                  (
+                      (getArea(f.getGeometry(), { projection: 'EPSG:3857' }) / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
+                  )
+                }}
+              </div>
+            </li>
+          </ul>
+          <div class="font-bold mt-4">
+            Gesamtfläche:&nbsp;
+            {{
+              (() => {
+                const sum = allPolygonFeatures.reduce(
+                    (acc, f) => acc + getArea(f.getGeometry(), { projection: 'EPSG:3857' }), 0
+                )
+                return (sum / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
+              })()
+            }}
+          </div>
+        </div>
+        <div v-else class="text-gray-400 italic">
+          (Keine Polygone geladen)
+        </div>
+        </div>
 
       </aside>
 
@@ -113,7 +152,8 @@ import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import KML from 'ol/format/KML'
 import Text from 'ol/style/Text'
-
+import { getArea } from 'ol/sphere'
+import { computed } from 'vue'
 
 import shp from 'shpjs'
 import GeoJSON from 'ol/format/GeoJSON'
@@ -298,6 +338,27 @@ const circleStyle = new CircleStyle({
   fill: new Fill({ color: '#db2777' }),
   stroke: new Stroke({ color: '#fff', width: 2 })
 })
+
+const allPolygonFeatures = computed(() => {
+  const features = []
+  if (kmlLayer.value) {
+    features.push(...kmlLayer.value.getSource().getFeatures().filter(f => {
+      const t = f.getGeometry().getType()
+      return t === 'Polygon' || t === 'MultiPolygon'
+    }))
+  }
+  if (shapefileLayer.value) {
+    features.push(...shapefileLayer.value.getSource().getFeatures().filter(f => {
+      const t = f.getGeometry().getType()
+      return t === 'Polygon' || t === 'MultiPolygon'
+    }))
+  }
+  // Nach Fläche absteigend sortieren:
+  return features.sort(
+      (a, b) => getArea(b.getGeometry(), { projection: 'EPSG:3857' }) - getArea(a.getGeometry(), { projection: 'EPSG:3857' })
+  )
+})
+
 
 function handleShpUpload(event) {
   const file = event.target.files[0]
