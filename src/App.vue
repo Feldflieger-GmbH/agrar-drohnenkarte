@@ -95,12 +95,13 @@ import TileWMS from 'ol/source/TileWMS'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import KML from 'ol/format/KML'
+import Text from 'ol/style/Text'
 
 
 import shp from 'shpjs'
 import GeoJSON from 'ol/format/GeoJSON'
 
-
+import Polygon from 'ol/geom/Polygon'
 import Style from 'ol/style/Style'
 import Stroke from 'ol/style/Stroke'
 import Fill from 'ol/style/Fill'
@@ -308,7 +309,12 @@ function handleKmlUpload(event) {
 
   const reader = new FileReader()
   reader.onload = function(e) {
-    const kmlText = e.target.result
+    let kmlText = e.target.result
+
+    // Korrigiere <Name> zu <name> für OpenLayers-Kompatibilität!
+    kmlText = kmlText.replace(/<Name>/g, '<name>').replace(/<\/Name>/g, '</name>')
+
+
     // Entferne alten KML-Layer, falls vorhanden
     if (kmlLayer.value) {
       map.removeLayer(kmlLayer.value)
@@ -338,9 +344,11 @@ function handleKmlUpload(event) {
 
 function kmlStyle(feature) {
   // Beispiel: Verschiedene Geometrie-Typen unterschiedlich darstellen
+  const PolyName = feature.get('name') || feature.get('NAME') || feature.get('Name') || 'NoName'
   if (feature.getGeometry().getType() === 'Point') {
     // Optional: Icon aus dem KML verwenden, falls vorhanden
     const iconHref = feature.getStyle() && feature.getStyle().getImage() && feature.getStyle().getImage().getSrc();
+
     if (iconHref) {
       return new Style({
         image: new Icon({
@@ -369,6 +377,42 @@ function kmlStyle(feature) {
   }
   // Flächen (z.B. Polygone)
   if (feature.getGeometry().getType() === 'Polygon') {
+    const coords = feature.getGeometry().getCoordinates()
+    const styles = []
+
+    // 1. Außenring: blau gefüllt
+    styles.push(
+        new Style({
+          stroke: new Stroke({ color: '#2563eb', width: 2 }),
+          fill: new Fill({ color: 'rgba(37,99,235,0.2)' }),
+          text: PolyName
+              ? new Text({
+                text: PolyName,
+                font: 'bold 14px Arial, sans-serif',
+                fill: new Fill({ color: '#2563eb' }),
+                stroke: new Stroke({ color: '#fff', width: 3 }),
+                overflow: true,
+              })
+              : undefined,
+          geometry: new Polygon([coords[0]]), // Nur Außenring
+        })
+    )
+
+    // 2. Alle Innenringe (Löcher): separat, z. B. rot umranden, weiß füllen
+    for (let i = 1; i < coords.length; ++i) {
+      styles.push(
+          new Style({
+            stroke: new Stroke({ color: '#dc2626', width: 2, lineDash: [4,4] }),
+            fill: new Fill({ color: 'rgba(255,255,255,0.8)' }),
+            geometry: new Polygon([coords[i]]), // Nur Innenring
+          })
+      )
+    }
+    return styles
+
+
+
+
     return new Style({
       stroke: new Stroke({
         color: '#2563eb', // blau
@@ -377,6 +421,16 @@ function kmlStyle(feature) {
       fill: new Fill({
         color: 'rgba(37, 99, 235, 0.2)',
       }),
+
+      text: PolyName
+          ? new Text({
+            text: PolyName,
+            font: 'bold 14px Arial, sans-serif',
+            fill: new Fill({ color: '#2563eb' }),
+            stroke: new Stroke({ color: '#fff', width: 3 }),
+            overflow: true,
+          })
+          : undefined,
     })
   }
   // Standard-Fallback
