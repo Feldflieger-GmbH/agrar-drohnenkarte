@@ -129,6 +129,41 @@
 
           </div>
 
+
+          <!-- Liste nach Zonen -->
+          <div class="mb-6">
+            <h4 class="font-bold mb-2">Dipul-Zonen und betroffene Felder</h4>
+            <div v-if="Object.keys(dipulZoneToFields).length > 0">
+              <div
+                  v-for="(felder, zonename) in dipulZoneToFields"
+                  :key="zonename"
+                  class="mb-4"
+              >
+                <div class="font-semibold text-blue-700 mb-1">
+                  {{ zonename }}
+                </div>
+                <ul class="ml-3 list-disc text-sm">
+                  <li v-for="feld in felder" :key="feld.getId() || JSON.stringify(feld.getGeometry().getCoordinates()[0][0])">
+                    {{ feld.get('name') || feld.get('NAME') || feld.get('bez') || '-' }}
+                    &nbsp;(
+                    {{
+                      (
+                          getArea(feld.getGeometry(), { projection: 'EPSG:3857' }) > 10000
+                              ? (getArea(feld.getGeometry(), { projection: 'EPSG:3857' }) / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
+                              : getArea(feld.getGeometry(), { projection: 'EPSG:3857' }).toLocaleString(undefined, {maximumFractionDigits:0}) + ' m²'
+                      )
+                    }}
+                    )
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div v-else class="text-gray-400 italic">
+              (Keine Überschneidungen gefunden)
+            </div>
+          </div>
+
+          <!-- Flächenliste -->
           <div v-if="allPolygonFeatures.length" class="mb-4">
             <h4 class="font-bold mb-2">Flächen auf der Karte</h4>
             <div class="font-bold mt-4">
@@ -289,6 +324,15 @@ const basemaps = [
   {
     name: "satellite",
     label: "Satellit (ESRI)",
+    layer: () => new TileLayer({
+      source: new XYZ({
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      })
+    })
+  },
+  {
+    name: "GeoBWFlurstuecke",
+    label: "GeoBWFlurstuecke",
     layer: () => new TileLayer({
       source: new XYZ({
         url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -458,6 +502,26 @@ function zoomToPolygon(feature) {
     })
   }
 }
+
+
+const dipulZoneToFields = computed(() => {
+  // Key: DIPUL-Feature-ID (oder Name)
+  // Value: Array von Polygon-Features
+  const mapping = {}
+  allPolygonFeatures.value.forEach(fld => {
+    const key = fld.getId() || JSON.stringify(fld.getGeometry().getCoordinates()[0][0])
+    const dipulList = polygonsWithDipul.value[key] || []
+    dipulList.forEach(zone => {
+      // Zonen-Namen/Feld als Key nehmen (z.B. zone.properties.type_code + zone.id)
+      // Nutze am besten eine sprechende Anzeige
+      const zoneKey = zone.properties?.type_code + ' ' + (zone.properties?.name || zone.id)
+      if (!mapping[zoneKey]) mapping[zoneKey] = []
+      mapping[zoneKey].push(fld)
+    })
+  })
+  return mapping
+})
+
 
 watch(allPolygonFeatures, async (features) => {
   const results = {}
