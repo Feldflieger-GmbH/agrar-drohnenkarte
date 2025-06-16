@@ -42,12 +42,13 @@
     <!-- Drei-Spalten-Layout -->
     <div class="flex flex-1 min-h-0">
       <!-- Linke Sidebar -->
-      <aside class="w-72 bg-gray-100 p-4 border-r border-gray-300 flex flex-col">
+      <aside class="w-72 bg-gray-100 p-4 border-r border-gray-300 flex flex-col" aria-label="Layer-Configuration">
         <div class="mb-4">
-          <label class="block font-semibold mb-2">Basiskarte wählen:</label>
+          <label class="block font-semibold mb-2">Basiskarte wählen:
           <select v-model="selectedBasemap" @change="changeBasemap" class="w-full p-1 border rounded">
             <option v-for="b in basemaps" :key="b.name" :value="b.name">{{ b.label }}</option>
           </select>
+          </label>
         </div>
         <h3 class="font-bold mb-2 mt-6">Kartenlayer</h3>
         <div class="space-y-1 overflow-y-auto flex-1">
@@ -72,7 +73,7 @@
       </main>
 
       <!-- Rechte Sidebar -->
-      <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-64px)]">
+      <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-64px)]" aria-label="Customer-Data">
         <div class="flex-1 overflow-y-auto">
 
           <h2 class="font-bold mb-2">Infos</h2>
@@ -428,7 +429,6 @@ watch(allPolygonFeatures, async (features) => {
   const results = {}
   for (const f of features) {
     const id = f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])
-    results[id] = null // noch in Prüfung
     results[id] = await getDipulFeaturesForPolygon(f)
   }
   polygonsWithDipul.value = results
@@ -587,10 +587,7 @@ function handleKmlUpload(event) {
 }
 
 function kmlStyle(feature) {
-  // Beispiel: Verschiedene Geometrie-Typen unterschiedlich darstellen
-  const PolyName = feature.get('name') || feature.get('NAME') || feature.get('Name') || 'NoName'
   if (feature.getGeometry().getType() === 'Point') {
-    // Optional: Icon aus dem KML verwenden, falls vorhanden
     const iconHref = feature.getStyle() && feature.getStyle().getImage() && feature.getStyle().getImage().getSrc();
 
     if (iconHref) {
