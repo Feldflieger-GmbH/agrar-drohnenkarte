@@ -42,7 +42,7 @@
     <!-- Drei-Spalten-Layout -->
     <div class="flex flex-1 min-h-0">
       <!-- Linke Sidebar -->
-      <aside class="w-72 bg-gray-100 p-4 border-r border-gray-300 flex flex-col max-h-[calc(100vh-64px)]" aria-label="Layer-Configuration">
+      <aside class="w-72 bg-gray-100 p-4 border-r border-gray-300 flex flex-col max-h-[calc(100vh-68px)]" aria-label="Layer-Configuration">
         <div class="flex-1 overflow-y-auto">
         <div class="mb-4">
           <label class="block font-semibold mb-2">Basiskarte wählen:
@@ -89,7 +89,7 @@
       </main>
 
       <!-- Rechte Sidebar -->
-      <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-64px)]" aria-label="Customer-Data">
+      <aside class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)]" aria-label="Customer-Data">
         <div class="flex-1 overflow-y-auto">
 
           <h2 class="font-bold mb-2">Infos</h2>
