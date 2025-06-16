@@ -150,6 +150,7 @@
               <li
                   v-for="(f, i) in allPolygonFeatures"
                   :key="f.getId() || i"
+                  @click="zoomToPolygon(f)"
                   class="border rounded p-2 bg-white shadow"
               >
                 <div>
@@ -166,10 +167,10 @@
                 </div>
                 <div>
                   <span class="font-semibold">DIPUL-Zonen:</span>
-                  <template v-if="polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])] === null">
+                  <template v-if="polygonsWithDipul.length === 0 || polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])] === null">
                     <span class="text-gray-400">⏳ Prüfung läuft…</span>
                   </template>
-                  <template v-else-if="polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])].length === 0">
+                  <template v-else-if="polygonsWithDipul.length > 0 && polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])].length === 0">
                     <span class="text-green-600 font-bold"> Keine</span>
                   </template>
                   <ul
@@ -177,7 +178,7 @@
                       class="list-disc list-inside text-sm mt-1"
                   >
                     <li
-                        v-for="feature in polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])] || []"
+                        v-for="feature in polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])]"
                         :key="feature.id"
                     >
                       <span class="font-semibold">{{ feature.id }}</span>
@@ -420,17 +421,59 @@ const allPolygonFeatures = computed(() => {
     }))
   }
   // Nach Fläche absteigend sortieren:
-  return features.sort(
-      (a, b) => getArea(b.getGeometry(), { projection: 'EPSG:3857' }) - getArea(a.getGeometry(), { projection: 'EPSG:3857' })
-  )
+  return features.sort((a, b) => {
+    const nameA = getFeatureName(a);
+    const nameB = getFeatureName(b);
+    // use localeCompare for proper alphabetical order;
+    // sensitivity:'base' makes it case- and accent-insensitive
+    return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+  })
 })
+
+function getFeatureName(feature) {
+  const props = feature.getProperties();
+  // try all your possible name fields, default to empty string
+  const name = (
+      props.name ||
+      props.NAME ||
+      props.Name ||
+      props.FLUR ||
+      props.BEZEICHNUNG ||
+      ''
+  ).toString();
+
+  console.log("FeatureName: ", name)
+
+  return name;
+}
+
+function zoomToPolygon(feature) {
+  // Hole das Extent der Geometrie
+  const geometry = feature.getGeometry()
+  if (geometry) {
+    map.getView().fit(geometry, {
+      padding: [60, 60, 60, 60], // Optional: Ränder
+      maxZoom: 18,               // Optional: nicht zu weit reinzoomen
+      duration: 600,             // Schöner Animationseffekt
+    })
+  }
+}
 
 watch(allPolygonFeatures, async (features) => {
   const results = {}
+  const featurePromises = []
   for (const f of features) {
     const id = f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])
-    results[id] = await getDipulFeaturesForPolygon(f)
+    const fet = getDipulFeaturesForPolygon(f).then(value => {
+      results[id] = value
+      if (value.length > 0) {
+        //break
+      }
+    })
+    featurePromises.push(fet)
+
   }
+  await Promise.all(featurePromises)
   polygonsWithDipul.value = results
 }, { immediate: true })
 
@@ -449,8 +492,8 @@ async function getDipulFeaturesForPolygon(polygonFeature) {
   const foundFeatures = []
 
   for (const exteriorRing of rings) {
-    // z. B. jeden 5. Punkt prüfen:
     const testCoordinates = exteriorRing.filter((_, idx) => idx % 5 === 0)
+
     for (const coordinate of testCoordinates) {
       const url = dipulWmsLayer.getSource().getFeatureInfoUrl(
           coordinate,
@@ -462,6 +505,7 @@ async function getDipulFeaturesForPolygon(polygonFeature) {
           }
       )
       if (!url) continue
+
       try {
         const res = await fetch(url)
         if (!res.ok) continue
@@ -469,12 +513,17 @@ async function getDipulFeaturesForPolygon(polygonFeature) {
         if (data.features && data.features.length > 0) {
           // Füge alle gefundenen Feature-Objekte hinzu, ohne Duplikate (nach id)
           data.features.forEach(feat => {
-            if (!foundFeatures.some(f => f.id === feat.id)) foundFeatures.push(feat)
+            if (!foundFeatures.some(f => f.id === feat.id)) {
+              foundFeatures.push(feat)
+            }
           })
         }
       } catch (e) { /* ignorieren */ }
+
+
     }
   }
+
   return foundFeatures
 }
 
