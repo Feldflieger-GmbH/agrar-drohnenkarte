@@ -272,7 +272,8 @@ import VectorSource from 'ol/source/Vector'
 import KML from 'ol/format/KML'
 import Text from 'ol/style/Text'
 import { getArea } from 'ol/sphere'
-
+import { Attribution } from 'ol/control';
+import OSM, {ATTRIBUTION} from 'ol/source/OSM';
 import shp from 'shpjs'
 import GeoJSON from 'ol/format/GeoJSON'
 
@@ -332,17 +333,17 @@ const basemaps = [
     name: "osm",
     label: "OpenStreetMap",
     layer: () => new TileLayer({
-      source: new XYZ({
-        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-      })
-    })
+        source: new OSM(),
+      }),
   },
   {
     name: "satellite",
     label: "Satellit (ESRI)",
+
     layer: () => new TileLayer({
       source: new XYZ({
         url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>"
       })
     })
   }
@@ -383,6 +384,7 @@ onMounted(() => {
 
   map = new Map({
     target: mapContainer.value,
+    controls: [new Attribution({ collapsible: false })],
     layers: [currentBaseLayer, dipulWmsLayer], // Start mit aktueller Basemap
     view: new View({
       center: [930000, 6640000],
