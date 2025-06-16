@@ -42,13 +42,28 @@
     <!-- Drei-Spalten-Layout -->
     <div class="flex flex-1 min-h-0">
       <!-- Linke Sidebar -->
-      <aside class="w-72 bg-gray-100 p-4 border-r border-gray-300 flex flex-col" aria-label="Layer-Configuration">
+      <aside class="w-72 bg-gray-100 p-4 border-r border-gray-300 flex flex-col max-h-[calc(100vh-64px)]" aria-label="Layer-Configuration">
+        <div class="flex-1 overflow-y-auto">
         <div class="mb-4">
           <label class="block font-semibold mb-2">Basiskarte wählen:
           <select v-model="selectedBasemap" @change="changeBasemap" class="w-full p-1 border rounded">
             <option v-for="b in basemaps" :key="b.name" :value="b.name">{{ b.label }}</option>
           </select>
           </label>
+        </div>
+        <div class="mb-4">
+          <label class="block font-semibold mb-2">Basiskarten-Transparenz:</label>
+          <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              v-model.number="baseOpacity"
+              class="w-full"
+          />
+          <div class="text-sm text-gray-500">
+            {{ Math.round(baseOpacity * 100) }}&nbsp;%
+          </div>
         </div>
         <h3 class="font-bold mb-2 mt-6">Kartenlayer</h3>
         <div class="space-y-1 overflow-y-auto flex-1">
@@ -64,6 +79,7 @@
               <span>{{ layer.name }}</span>
             </label>
           </div>
+        </div>
         </div>
       </aside>
 
@@ -329,24 +345,23 @@ const basemaps = [
         url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       })
     })
-  },
-  {
-    name: "GeoBWFlurstuecke",
-    label: "GeoBWFlurstuecke",
-    layer: () => new TileLayer({
-      source: new XYZ({
-        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      })
-    })
   }
 ]
 const selectedBasemap = ref("osm")
 let currentBaseLayer = null;
 
+const baseOpacity = ref(1) // 1 = 100 %, 0 = ganz durchsichtig
 const mapContainer = ref(null)
 let map
 let baseLayers = {}
 const wmsLayers = {}
+
+
+// Aktualisiere die Layer-Opacity, wenn sich der Wert ändert:
+watch(baseOpacity, (val) => {
+  if (currentBaseLayer) currentBaseLayer.setOpacity(val)
+})
+
 
 onMounted(() => {
   const selected = basemaps.find(b => b.name === selectedBasemap.value)
