@@ -149,7 +149,25 @@
           <!-- Liste nach Zonen -->
           <div class="mb-6">
             <h4 class="font-bold mb-2">Dipul-Zonen und betroffene Felder</h4>
-            <div v-if="Object.keys(dipulZoneToFields).length > 0">
+            <div class="mb-3 flex items-center gap-2">
+            <label for="dipulCheck">
+              <input type="checkbox" v-model="dipulCheckActive" id="dipulCheck" class="form-checkbox">
+              Dipul-Check Aktiv
+            </label>
+            </div>
+            <div v-if="dipulCheckActive" class="mb-3 flex items-center gap-2">
+            <label for="dipulCheckRes">
+              <input type="number"  v-model="dipulCheckRes" id="dipulCheckRes" class="form-textbox" min="2" max="10">
+              Auflösung (jeder x-te punkt wird geprüft.)
+            </label>
+            </div>
+            <div v-if="dipulCheckActive" class="mb-3 flex items-center gap-2">
+            <label for="dipulCheckShowPoints">
+              <input type="checkbox" v-model="dipulCheckShowPoints" id="dipulCheckShowPoints" class="form-checkbox">
+              Prüfpunkte anzeigen
+            </label>
+            </div>
+            <div v-if="dipulCheckActive && Object.keys(dipulZoneToFields).length > 0">
               <div
                   v-for="(felder, zonename) in dipulZoneToFields"
                   :key="zonename"
@@ -171,7 +189,7 @@
                 </ul>
               </div>
             </div>
-            <div v-else class="text-gray-400 italic">
+            <div v-else-if="dipulCheckActive" class="text-gray-400 italic">
               (Keine Überschneidungen gefunden)
             </div>
           </div>
@@ -330,6 +348,9 @@ const shapefileLayer = ref(null)
 const kmlLayer = ref(null)
 const activeLayers = ref(dipulLayers.map(layer => layer.wmsName))
 let dipulWmsLayer = null;
+const dipulCheckShowPoints = ref(false)
+const dipulCheckActive = ref(true)
+const dipulCheckRes = ref(5)
 
 // Basemap-Auswahl
 const basemaps = [
@@ -346,16 +367,6 @@ const basemaps = [
     layer: () => new TileLayer({
       source: new XYZ({
         url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>"
-      })
-    })
-  },
-  {
-    name: "satellite",
-    label: "Satellit (ESRI)",
-    layer: () => new TileLayer({
-      source: new XYZ({
-        url: 'https://owsproxy.lgl-bw.de/owsproxy/ows/WMS_LGL-BW_ALKIS_Basis_transparent?   /tile/{z}/{y}/{x}',
         attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>"
       })
     })
@@ -376,11 +387,16 @@ const pinSource = new VectorSource()
 const pinLayer = new VectorLayer({
   source: pinSource,
   zIndex: 99,
+  visible: dipulCheckShowPoints.value
 })
 
 // Aktualisiere die Layer-Opacity, wenn sich der Wert ändert:
 watch(baseOpacity, (val) => {
   if (currentBaseLayer) currentBaseLayer.setOpacity(val)
+})
+
+watch(dipulCheckShowPoints, (val) => {
+  pinLayer.setVisible(val)
 })
 
 
@@ -563,7 +579,12 @@ const dipulZoneToFields = computed(() => {
 })
 
 
-watch(allPolygonFeatures, async (features) => {
+watch([allPolygonFeatures, dipulCheckActive, dipulCheckRes], async ([features, checkActive]) => {
+  if(!checkActive) {
+    polygonsWithDipul.value = {}
+    return
+  }
+  removeAllPins()
   const results = {}
   const featurePromises = []
   for (const f of features) {
@@ -626,7 +647,7 @@ async function getDipulFeaturesForPolygon(polygonFeature) {
   const foundFeatures = []
 
   for (const exteriorRing of rings) {
-    const testCoordinates = exteriorRing.filter((_, idx) => idx % 5 === 0)
+    const testCoordinates = exteriorRing.filter((_, idx) => idx % dipulCheckRes.value === 0)
 
     for (const coordinate of testCoordinates) {
       console.log("Request features for: ", coordinate)
