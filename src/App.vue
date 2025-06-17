@@ -163,11 +163,8 @@
                     {{ feld.get('name') || feld.get('NAME') || feld.get('bez') || '-' }}
                     &nbsp;(
                     {{
-                      (
-                          getArea(feld.getGeometry(), { projection: 'EPSG:3857' }) > 10000
-                              ? (getArea(feld.getGeometry(), { projection: 'EPSG:3857' }) / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
-                              : getArea(feld.getGeometry(), { projection: 'EPSG:3857' }).toLocaleString(undefined, {maximumFractionDigits:0}) + ' m²'
-                      )
+                      (getArea(feld.getGeometry(), { projection: 'EPSG:3857' }) / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
+
                     }}
                     )
                   </li>
@@ -184,7 +181,7 @@
             <h4 class="font-bold mb-2">Flächen auf der Karte</h4>
             <div class="font-bold mt-4">
               Flächenzahl:&nbsp;
-              {{ allPolygonFeatures.length+1 }}
+              {{ allPolygonFeatures.length }}
             </div>
             <div class="font-bold mt-4">
               Gesamtfläche:&nbsp;
@@ -283,8 +280,15 @@ import Stroke from 'ol/style/Stroke'
 import Fill from 'ol/style/Fill'
 import Icon from 'ol/style/Icon'
 import CircleStyle from 'ol/style/Circle'
+import {Feature} from "ol";
+import {Point} from "ol/geom.js";
 
 const DIPUL_WMS_URL = 'https://uas-betrieb.de/geoservices/dipul/wms'
+const ALKIS_WMS_URL = 'https://owsproxy.lgl-bw.de/owsproxy/ows/WMTS_LGL-BW_ALKIS_Basis? '
+
+const alkisLayers = [
+  { name: "Flurstücke", wmsName: "Flurstücke" }, ]
+
 
 const dipulLayers = [
   { name: "Flugplätze", wmsName: "dipul:flugplaetze" },
@@ -339,24 +343,40 @@ const basemaps = [
   {
     name: "satellite",
     label: "Satellit (ESRI)",
-
     layer: () => new TileLayer({
       source: new XYZ({
         url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>"
       })
     })
+  },
+  {
+    name: "satellite",
+    label: "Satellit (ESRI)",
+    layer: () => new TileLayer({
+      source: new XYZ({
+        url: 'https://owsproxy.lgl-bw.de/owsproxy/ows/WMS_LGL-BW_ALKIS_Basis_transparent?   /tile/{z}/{y}/{x}',
+        attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>"
+      })
+    })
   }
 ]
+
 const selectedBasemap = ref("osm")
 let currentBaseLayer = null;
 
-const baseOpacity = ref(1) // 1 = 100 %, 0 = ganz durchsichtig
+const baseOpacity = ref(1) // 1 = 100%, 0 = ganz durchsichtig
 const mapContainer = ref(null)
 let map
 let baseLayers = {}
 const wmsLayers = {}
 
+import pinImg from './assets/pin_mini_16px.png'
+const pinSource = new VectorSource()
+const pinLayer = new VectorLayer({
+  source: pinSource,
+  zIndex: 99,
+})
 
 // Aktualisiere die Layer-Opacity, wenn sich der Wert ändert:
 watch(baseOpacity, (val) => {
@@ -392,6 +412,7 @@ onMounted(() => {
     }),
   })
 
+  map.addLayer(pinLayer)
 
   // Click-Listener für GetFeatureInfo
   map.on('click', function(evt) {
@@ -417,6 +438,7 @@ function removeKmlLayer() {
   if (kmlLayer.value) {
     map.removeLayer(kmlLayer.value)
     kmlLayer.value = null
+    removeAllPins()
   }
 }
 
@@ -424,6 +446,7 @@ function removeShapefileLayer() {
   if (shapefileLayer.value) {
     map.removeLayer(shapefileLayer.value)
     shapefileLayer.value = null
+    removeAllPins()
   }
 }
 
@@ -481,7 +504,7 @@ const allPolygonFeatures = computed(() => {
       return t === 'Polygon' || t === 'MultiPolygon'
     }))
   }
-  // Nach Fläche absteigend sortieren:
+  // Nach Name sortieren
   return features.sort((a, b) => {
     const nameA = getFeatureName(a);
     const nameB = getFeatureName(b);
@@ -513,9 +536,9 @@ function zoomToPolygon(feature) {
   const geometry = feature.getGeometry()
   if (geometry) {
     map.getView().fit(geometry, {
-      padding: [60, 60, 60, 60], // Optional: Ränder
-      maxZoom: 18,               // Optional: nicht zu weit reinzoomen
-      duration: 600,             // Schöner Animationseffekt
+      padding: [60, 60, 60, 60], // Ränder
+      maxZoom: 18,               // nicht zu weit reinzoomen
+      duration: 600,             // Animationseffekt
     })
   }
 }
@@ -545,19 +568,49 @@ watch(allPolygonFeatures, async (features) => {
   const featurePromises = []
   for (const f of features) {
     const id = f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])
-    const fet = getDipulFeaturesForPolygon(f).then(value => {
+    const p =  getDipulFeaturesForPolygon(f).then(value => {
       results[id] = value
       if (value.length > 0) {
         //break
       }
     })
-    featurePromises.push(fet)
+    featurePromises.push(p)
+
 
   }
   await Promise.all(featurePromises)
   polygonsWithDipul.value = results
 }, { immediate: true })
 
+function removeAllPins() {
+  pinSource.clear()
+}
+// Funktion zum Setzen des Pins an Koordinaten (EPSG:3857!)
+  function addPinAt(coord) {
+    const pinFeature = new Feature({
+      geometry: new Point(coord),
+    })
+    //const textC = coord.toString()
+    pinFeature.setStyle(
+        new Style({
+          /*text: textC // oder ein anderes Feld
+              ? new Text({
+                text: textC, // DBF-Feldname!
+                font: 'bold 14px Arial, sans-serif',
+                fill: new Fill({ color: '#0891b2' }),
+                stroke: new Stroke({ color: '#fff', width: 3 }),
+                overflow: true,
+              })
+              : undefined,*/
+          image: new Icon({
+            src: pinImg,
+            anchor: [0.5, 1],
+            scale: 1, // Passe ggf. die Größe an
+          }),
+        })
+    )
+    pinSource.addFeature(pinFeature)
+  }
 
 
 async function getDipulFeaturesForPolygon(polygonFeature) {
@@ -576,13 +629,16 @@ async function getDipulFeaturesForPolygon(polygonFeature) {
     const testCoordinates = exteriorRing.filter((_, idx) => idx % 5 === 0)
 
     for (const coordinate of testCoordinates) {
+      console.log("Request features for: ", coordinate)
+      addPinAt(coordinate)
       const url = dipulWmsLayer.getSource().getFeatureInfoUrl(
           coordinate,
-          map.getView().getResolution(),
+          map.getView().getResolutionForZoom(18),
           'EPSG:3857',
           {
             INFO_FORMAT: 'application/json',
             QUERY_LAYERS: activeLayers.value.join(','),
+            feature_count: 100
           }
       )
       if (!url) continue
@@ -595,6 +651,7 @@ async function getDipulFeaturesForPolygon(polygonFeature) {
           // Füge alle gefundenen Feature-Objekte hinzu, ohne Duplikate (nach id)
           data.features.forEach(feat => {
             if (!foundFeatures.some(f => f.id === feat.id)) {
+              console.log("Feat: ", feat)
               foundFeatures.push(feat)
             }
           })
@@ -620,7 +677,7 @@ function handleShpUpload(event) {
     return
   }
 
-
+  removeAllPins()
   const reader = new FileReader()
   reader.onload = function(e) {
     const arrayBuffer = e.target.result
@@ -680,7 +737,7 @@ function handleShpUpload(event) {
 function handleKmlUpload(event) {
   const file = event.target.files[0]
   if (!file) return
-
+  removeAllPins()
   const reader = new FileReader()
   reader.onload = function(e) {
     let kmlText = e.target.result
@@ -812,8 +869,6 @@ function getFeatureInfo(coordinate, evt) {
   fetch(url)
       .then(r => r.json())                // <-- check console if this throws
       .then(json => {
-        // GeoServer / MapServer returns a FeatureCollection:
-        // { "type":"FeatureCollection", "features":[ … ] }
         featureInfo.value = json.features ?? []
       })
 
