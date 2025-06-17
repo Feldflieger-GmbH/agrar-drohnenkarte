@@ -169,24 +169,33 @@
             </div>
             <div v-if="dipulCheckActive && Object.keys(dipulZoneToFields).length > 0">
               <div
-                  v-for="(felder, zonename) in dipulZoneToFields"
-                  :key="zonename"
+                  v-for="(zoneNameList, zoneCategory) in dipulZoneToFields"
+                  :key="zoneCategory"
                   class="mb-4"
               >
                 <div class="font-semibold text-blue-700 mb-1">
-                  {{ zonename }}
+                  {{ zoneCategory }}
                 </div>
-                <ul class="ml-3 list-disc text-sm">
-                  <li v-for="feld in felder" :key="feld.getId() || JSON.stringify(feld.getGeometry().getCoordinates()[0][0])">
-                    {{ feld.get('name') || feld.get('NAME') || feld.get('bez') || '-' }}
-                    &nbsp;(
-                    {{
-                      (getArea(feld.getGeometry(), { projection: 'EPSG:3857' }) / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
+                <div
+                    v-for="(felder, zoneName) in zoneNameList"
+                    :key="zoneName"
+                    class="mb-4"
+                >
+                  <div class="font-semibold text-blue-400 mb-1">
+                    {{ zoneName }}
+                  </div>
+                  <ul class="ml-3 list-disc text-sm">
+                    <li v-for="feld in felder" :key="JSON.stringify(feld.getGeometry().getCoordinates()[0][0])">
+                      {{ feld.get('name') || feld.get('NAME') || feld.get('bez') || '-' }}
+                      &nbsp;(
+                      {{
+                        (getArea(feld.getGeometry(), { projection: 'EPSG:3857' }) / 10000).toLocaleString(undefined, {maximumFractionDigits:2}) + ' ha'
 
-                    }}
-                    )
-                  </li>
-                </ul>
+                      }}
+                      )
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
             <div v-else-if="dipulCheckActive" class="text-gray-400 italic">
@@ -570,9 +579,15 @@ const dipulZoneToFields = computed(() => {
     dipulList.forEach(zone => {
       // Zonen-Namen/Feld als Key nehmen (z.B. zone.properties.type_code + zone.id)
       // Nutze am besten eine sprechende Anzeige
-      const zoneKey = zone.properties?.type_code + ' ' + (zone.properties?.name || zone.id)
-      if (!mapping[zoneKey]) mapping[zoneKey] = []
-      mapping[zoneKey].push(fld)
+      const zoneKey1 = zone.properties?.type_code
+      const zoneKey2 = (zone.properties?.name || zone.id)
+
+      if (!mapping[zoneKey1]) {
+        mapping[zoneKey1] = {}
+      }
+
+      if (!mapping[zoneKey1][zoneKey2]) mapping[zoneKey1][zoneKey2] = []
+      mapping[zoneKey1][zoneKey2].push(fld)
     })
   })
   return mapping
