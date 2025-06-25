@@ -152,34 +152,30 @@
               }}
             </div>
             <div>
-              <span class="font-semibold">DIPUL-Zonen:</span>
-              <template
-                  v-if="polygonsWithDipul[f.feature.getId() || JSON.stringify(f.geometry.getCoordinates()[0][0])] === null">
+              <span class="font-semibold">DIPUL-Zonen: </span>
+              <template v-if="getDipulForFeature(f) === null">
                 <span class="text-gray-400">⏳ Prüfung läuft…</span>
               </template>
-              <template
-                  v-else-if="polygonsWithDipul[f.feature.getId() || JSON.stringify(f.geometry.getCoordinates()[0][0])].length === 0">
-                <span class="text-green-600 font-bold"> Keine</span>
+              <template v-else-if="Array.isArray(getDipulForFeature(f)) && getDipulForFeature(f).length === 0">
+                <span class="text-green-600 font-bold">Keine</span>
               </template>
               <ul
-                  v-else
+                  v-else-if="Array.isArray(getDipulForFeature(f))"
                   class="list-disc list-inside text-sm mt-1"
               >
-                <li
-                    v-for="feature in polygonsWithDipul[f.feature.getId() || JSON.stringify(f.geometry.getCoordinates()[0][0])]"
-                    :key="feature.id"
-                >
-                  <span class="font-semibold">{{ feature.id }}</span>
+                <li v-for="feature in getDipulForFeature(f)" :key="feature.id">
+                  <span class="font-semibold">{{ feature.properties.type_code }}</span>
                   <template v-if="feature.properties">
-                    <template v-if="feature.properties.type_code">
-                      ({{ feature.properties.type_code }})
-                    </template>
                     <template v-if="feature.properties.name && feature.properties.name !== ''">
                       – {{ feature.properties.name }}
                     </template>
                   </template>
                 </li>
               </ul>
+              <template v-else>
+                <span class="text-gray-400">⏳ Prüfung läuft…</span>
+              </template>
+
             </div>
           </li>
         </ul>
@@ -203,4 +199,23 @@ import {
   removeShapefileLayer,
   shapefileLayer, zoomToPolygon
 } from "../composables/customerMaps.ts";
+import type Polygon from "ol/geom/Polygon";
+import type {Feature} from "ol";
+import type {Geometry, MultiPolygon} from "ol/geom";
+
+function getDipulForFeature(f: {
+  feature: Feature<Geometry>
+  geometry: Polygon | MultiPolygon
+}) {
+
+  let fID;
+  if (f.feature.getId() !== undefined) {
+    fID = f.feature.getId().toString()
+  }
+
+
+  const key: string = fID || JSON.stringify(f.geometry.getCoordinates()[0][0]);
+  const v = polygonsWithDipul.value[key]
+  return v;
+}
 </script>

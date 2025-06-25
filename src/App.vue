@@ -93,7 +93,7 @@ watch([allPolygonFeatures, dipulCheckActive, dipulCheckRes], async ([features, c
     }
 
     const id = fID || JSON.stringify(f.geometry.getCoordinates()[0][0])
-    const p = getDipulFeaturesForPolygon(f).then(value => {
+    const p = getDipulFeaturesForPolygon(f.feature).then(value => {
       results[id] = value
       if (value.length > 0) {
         //break

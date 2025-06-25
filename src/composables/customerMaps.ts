@@ -22,8 +22,10 @@ import type {Coordinate} from "ol/coordinate";
 import type TileWMS from "ol/source/TileWMS";
 
 
-
-export const polygonsWithDipul: Ref<{[key: string]: DipulFeature[]}> = ref({})
+interface DipulFeatureMap {
+    [key: string]: DipulFeature[];
+}
+export const polygonsWithDipul: Ref<DipulFeatureMap> = ref({})
 export const dipulCheckShowPoints = ref(false)
 const pinSource = new VectorSource()
 export const pinLayer = new VectorLayer({
@@ -414,6 +416,8 @@ export function getFeatureInfo(coordinate: Coordinate) {
 
 
 export async function getDipulFeaturesForPolygon(polygonFeature: Feature<Geometry>) {
+
+
     const geom = polygonFeature.getGeometry()
     let rings: Array<Coordinate>[] = []
 
