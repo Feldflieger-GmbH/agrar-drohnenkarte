@@ -330,6 +330,11 @@ export const dipulZoneToFields = computed(() => {
             dipulList = polygonsWithDipul.value[key]
         }
 
+        if (dipulList === undefined) {
+            return
+        }
+
+
         dipulList.forEach(zone => {
             // Zonen-Namen/Feld als Key nehmen (z.B. zone.properties.type_code + zone.id)
             // Nutze am besten eine sprechende Anzeige

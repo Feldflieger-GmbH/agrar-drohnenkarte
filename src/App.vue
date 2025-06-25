@@ -88,11 +88,11 @@ watch([allPolygonFeatures, dipulCheckActive, dipulCheckRes], async ([features, c
   for (const f of features) {
 
     let fID;
-    if (f.getId() !== undefined) {
-      fID = f.getId().toString()
+    if (f.feature.getId() !== undefined) {
+      fID = f.feature.getId().toString()
     }
 
-    const id = fID || JSON.stringify(f.getGeometry().getCoordinates()[0][0])
+    const id = fID || JSON.stringify(f.geometry.getCoordinates()[0][0])
     const p = getDipulFeaturesForPolygon(f).then(value => {
       results[id] = value
       if (value.length > 0) {
