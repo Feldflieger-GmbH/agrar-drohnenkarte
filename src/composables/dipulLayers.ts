@@ -1,18 +1,20 @@
-import {type Ref, ref} from "vue";
+import {type Ref, ref, watch} from "vue";
 import TileLayer from "ol/layer/Tile";
 import TileWMS from "ol/source/TileWMS";
+
 
 const DIPUL_WMS_URL = 'https://uas-betrieb.de/geoservices/dipul/wms'
 
 
-interface dipulLayer {
+export const dipulOpacity: Ref<number> = ref(1) // 0 = ganz durchsichtig
+export interface dipulLayer {
     name: string
     wmsName: string
     color: string
     checked: boolean
 }
 
-interface dipulLayerGroup {
+export interface agMapLayerGroup {
     name: string
     icon: string
     expanded: boolean
@@ -22,7 +24,7 @@ interface dipulLayerGroup {
 
 export const activeDipulLayers = ref<string[]>([])
 export const dipulLayerUI = ref(false)
-export const dipulLayerGroups: Ref<dipulLayerGroup[]> = ref([
+export const dipulLayerGroups: Ref<agMapLayerGroup[]> = ref([
     {
         name: 'Luftverkehr',
         icon: 'bg-red-300',
@@ -162,6 +164,10 @@ export const dipulLayerGroups: Ref<dipulLayerGroup[]> = ref([
     }
 ])
 
+// Aktualisiere die Layer-Opacity, wenn sich der Wert ändert:
+watch(dipulOpacity, (val) => {
+    if (dipulWmsLayer) dipulWmsLayer.setOpacity(val)
+})
 export const dipulWmsLayer = new TileLayer({
     source: new TileWMS({
         url: DIPUL_WMS_URL,
@@ -171,8 +177,9 @@ export const dipulWmsLayer = new TileLayer({
         },
         serverType: 'geoserver',
     }),
-    opacity: 0.6,
-    visible: true,
+    opacity: dipulOpacity.value,
+    visible: dipulOpacity.value>0,
+
 })
 
 export function toggleLayer(layer: dipulLayer) {

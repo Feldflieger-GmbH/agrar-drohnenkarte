@@ -34,11 +34,6 @@ import {
   pinLayer, polygonsWithDipul, removeAllPins
 } from "./composables/customerMaps.js";
 
-const ALKIS_WMS_URL = 'https://owsproxy.lgl-bw.de/owsproxy/ows/WMTS_LGL-BW_ALKIS_Basis?'
-
-const alkisLayerGroups = ref([
-  {name: "Flurstücke", wmsName: "Flurstücke", color: 'bg-red-200', checked: false},])
-
 
 
 
