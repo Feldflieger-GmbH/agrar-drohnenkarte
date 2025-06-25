@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.10",
+    "@types/shpjs": "^3.4.7",
     "@types/tailwindcss": "^3.0.11",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
