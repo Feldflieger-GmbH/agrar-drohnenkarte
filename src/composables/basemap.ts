@@ -68,7 +68,7 @@ watch(baseOpacity, (val) => {
 
 
 export function changeBasemap() {
-  /*  if (currentBaseLayer) {
+    if (currentBaseLayer) {
         agMap.removeLayer(currentBaseLayer)
     }
 
@@ -79,5 +79,5 @@ export function changeBasemap() {
     currentBaseLayer.setOpacity(baseOpacity.value)
     // Füge neuen Basemap-Layer GANZ vorne ein
 
-    agMap.getLayers().insertAt(0, currentBaseLayer)*/
+    agMap.getLayers().insertAt(0, currentBaseLayer)
 }
