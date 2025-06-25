@@ -244,39 +244,55 @@ export function removeShapefileLayer() {
 }
 
 export const allPolygonFeatures = computed(() => {
-    const features:  Feature<Geometry>[] = []
+    const features:  {
+        feature: Feature<Geometry>
+        geometry: Polygon | MultiPolygon
+    }[] = []
+
     if (kmlLayer.value && kmlLayer.value.getSource()) {
 
         const src = kmlLayer.value.getSource()
         if(src!=null) {
-            features.push(...src.getFeatures().filter(f => {
+
+            const featureList = src.getFeatures().filter(f => {
                 const t = f.getGeometry()
                 return (t instanceof Polygon || t instanceof MultiPolygon)
-            }))
+            })
+
+            features.push(...featureList.map(feature => ({
+                feature: feature,
+                geometry: feature.getGeometry() as Polygon | MultiPolygon
+            })))
         }
     }
     if (shapefileLayer.value && shapefileLayer.value.getSource()) {
 
         const src = shapefileLayer.value.getSource()
         if (src != null) {
-            features.push(...src.getFeatures().filter(f => {
+
+            const featureList = src.getFeatures().filter(f => {
                 const t = f.getGeometry()
                 return (t instanceof Polygon || t instanceof MultiPolygon)
-            }))
+            })
+
+            features.push(...featureList.map(feature => ({
+                feature: feature,
+                geometry: feature.getGeometry() as Polygon | MultiPolygon
+            })))
         }
     }
 
 
     return features.sort((a, b) => {
-        const nameA = getFeatureName(a);
-        const nameB = getFeatureName(b);
+        const nameA = getFeatureName(a.feature);
+        const nameB = getFeatureName(b.feature);
         // use localeCompare for proper alphabetical order;
         // sensitivity:'base' makes it case- and accent-insensitive
         return nameA.localeCompare(nameB, undefined, {sensitivity: 'base'});
     })
 })
 
-function getFeatureName(feature: Feature) {
+function getFeatureName(feature: Feature): string {
     const props = feature.getProperties();
     // try all your possible name fields, default to empty string
     const name = (
@@ -296,15 +312,18 @@ function getFeatureName(feature: Feature) {
 export const dipulZoneToFields = computed(() => {
     // Key: DIPUL-Feature-ID (oder Name)
     // Value: Array von Polygon-Features
-    const mapping: {[key: string]: {[key: string]:  Feature<Geometry>[]}} = {}
+    const mapping: {[key: string]: {[key: string]:  {
+        feature: Feature<Geometry>
+        geometry: Polygon | MultiPolygon
+        name: string
+    }[]}} = {}
 
     if (allPolygonFeatures.value == undefined) return mapping
 
     allPolygonFeatures.value.forEach(fld => {
-        const fGeo  = fld.getGeometry()
-        if (fGeo === undefined || !(fGeo instanceof Polygon || fGeo instanceof MultiPolygon)) return
+        const fGeo  = fld.geometry
 
-        const key = fld.getId() || JSON.stringify(fGeo.getCoordinates()[0][0])
+        const key = fld.feature.getId() || JSON.stringify(fGeo.getCoordinates()[0][0])
 
         let dipulList: DipulFeature[] = [];
         if (polygonsWithDipul.value) {
@@ -314,6 +333,8 @@ export const dipulZoneToFields = computed(() => {
         dipulList.forEach(zone => {
             // Zonen-Namen/Feld als Key nehmen (z.B. zone.properties.type_code + zone.id)
             // Nutze am besten eine sprechende Anzeige
+
+            let geo = fld.geometry
 
             if (zone.properties == null) {
                 return
@@ -327,7 +348,11 @@ export const dipulZoneToFields = computed(() => {
             }
 
             if (!mapping[zoneKey1][zoneKey2]) mapping[zoneKey1][zoneKey2] = []
-            mapping[zoneKey1][zoneKey2].push(fld)
+            mapping[zoneKey1][zoneKey2].push({
+                feature: fld.feature,
+                geometry: geo as Polygon | MultiPolygon,
+                name: getFeatureName(fld.feature)
+            })
         })
     })
     return mapping

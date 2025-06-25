@@ -54,7 +54,7 @@
             type="range"
         />
       <ul>
-        <li v-for="(group, gIdx) in dipulLayerGroups" :key="group.name" class="">
+        <li v-for="(group, _) in dipulLayerGroups" :key="group.name" class="">
           <!-- Gruppenkopf -->
           <button
               class="flex items-center w-full py-1 focus:outline-none select-none group"
@@ -117,7 +117,7 @@
         />
       </div>
       <ul>
-        <li v-for="(group, gIdx) in geoBWLayerGroups" :key="group.name" class="">
+        <li v-for="(group, _) in geoBWLayerGroups" :key="group.name" class="">
           <!-- Gruppenkopf -->
           <button
               class="flex items-center w-full py-1 focus:outline-none select-none group"

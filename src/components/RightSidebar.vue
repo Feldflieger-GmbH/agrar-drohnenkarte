@@ -96,11 +96,11 @@
                 {{ zoneName }}
               </div>
               <ul class="ml-3 list-disc text-sm">
-                <li v-for="feld in felder" :key="JSON.stringify(feld.getGeometry().getCoordinates()[0][0])">
-                  {{ feld.get('name') || feld.get('NAME') || feld.get('bez') || '-' }}
+                <li v-for="feld in felder" :key="JSON.stringify(feld.geometry.getCoordinates()[0][0])">
+                  {{ feld.feature.get('name') || feld.feature.get('NAME') || feld.feature.get('bez') || '-' }}
                   &nbsp;(
                   {{
-                    (getArea(feld.getGeometry(), {projection: 'EPSG:3857'}) / 10000).toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ha'
+                    (getArea(feld.geometry, {projection: 'EPSG:3857'}) / 10000).toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ha'
 
                   }}
                   )
@@ -126,7 +126,7 @@
           {{
             (() => {
               const sum = allPolygonFeatures.reduce(
-                  (acc, f) => acc + getArea(f.getGeometry(), {projection: 'EPSG:3857'}), 0
+                  (acc, f) => acc + getArea(f.geometry, {projection: 'EPSG:3857'}), 0
               )
               return (sum / 10000).toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ha'
             })()
@@ -135,30 +135,30 @@
         <ul class="space-y-2">
           <li
               v-for="(f, i) in allPolygonFeatures"
-              :key="f.getId() || i"
+              :key="f.feature.getId() || i"
               class="border rounded p-2 bg-white shadow"
-              @click="zoomToPolygon(f)"
+              @click="zoomToPolygon(f.feature)"
           >
             <div>
               <span class="font-semibold">Name:</span>
-              {{ f.get('name') || f.get('NAME') || f.get('bez') || '-' }}
+              {{ f.feature.get('name') || f.feature.get('NAME') || f.feature.get('bez') || '-' }}
             </div>
             <div>
               <span class="font-semibold">Fläche:</span>
               {{
                 (
-                    (getArea(f.getGeometry(), {projection: 'EPSG:3857'}) / 10000).toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ha'
+                    (getArea(f.geometry, {projection: 'EPSG:3857'}) / 10000).toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ha'
                 )
               }}
             </div>
             <div>
               <span class="font-semibold">DIPUL-Zonen:</span>
               <template
-                  v-if="polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])] === null">
+                  v-if="polygonsWithDipul[f.feature.getId() || JSON.stringify(f.geometry.getCoordinates()[0][0])] === null">
                 <span class="text-gray-400">⏳ Prüfung läuft…</span>
               </template>
               <template
-                  v-else-if="polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])].length === 0">
+                  v-else-if="polygonsWithDipul[f.feature.getId() || JSON.stringify(f.geometry.getCoordinates()[0][0])].length === 0">
                 <span class="text-green-600 font-bold"> Keine</span>
               </template>
               <ul
@@ -166,7 +166,7 @@
                   class="list-disc list-inside text-sm mt-1"
               >
                 <li
-                    v-for="feature in polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])]"
+                    v-for="feature in polygonsWithDipul[f.feature.getId() || JSON.stringify(f.geometry.getCoordinates()[0][0])]"
                     :key="feature.id"
                 >
                   <span class="font-semibold">{{ feature.id }}</span>
