@@ -2,26 +2,28 @@ import GeoJSON from "ol/format/GeoJSON";
 import {agMap} from "./basemap.ts";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
-import Style, {type StyleLike} from "ol/style/Style";
+import Style from "ol/style/Style";
 import {computed, type Ref, ref} from "vue";
 import shp from 'shpjs'
 import Icon from "ol/style/Icon";
 import pinImg from "../assets/pin_mini_16px.png";
 import {circleStyle, lineStyle, polygonInnerStyle, polygonStyle} from "./kmlStyles.ts";
 import {Feature} from "ol";
-import {Geometry, LineString, Point} from "ol/geom";
+import {Geometry, LineString, MultiPolygon, Point, SimpleGeometry} from "ol/geom";
 import KML from "ol/format/KML";
 import CircleStyle from "ol/style/Circle";
 import Fill from "ol/style/Fill";
 import Stroke from "ol/style/Stroke";
 import {activeDipulLayers, dipulWmsLayer} from "./dipulLayers.ts";
-import type {DipulFeature, FeatureCollection} from "./dipulFeature.ts";
+import type {DipulFeature, DipulFeatureCollection} from "./dipulFeature.ts";
 import type {FeatureLike} from "ol/Feature";
 import Polygon from "ol/geom/Polygon";
+import type {Coordinate} from "ol/coordinate";
+import type TileWMS from "ol/source/TileWMS";
 
 
 
-export const polygonsWithDipul: Ref<{[key: string]: DipulFeature[]}| undefined> = ref()
+export const polygonsWithDipul: Ref<{[key: string]: DipulFeature[]}> = ref({})
 export const dipulCheckShowPoints = ref(false)
 const pinSource = new VectorSource()
 export const pinLayer = new VectorLayer({
@@ -32,14 +34,20 @@ export const pinLayer = new VectorLayer({
 export const shapefileLayer : Ref<VectorLayer<VectorSource<Feature<Geometry>>, Feature<Geometry>> | undefined> = ref()
 export const kmlLayer: Ref<VectorLayer<VectorSource<Feature<Geometry>>, Feature<Geometry>> | undefined> = ref()
 
-export const featureInfo = ref([]) // Array für Features
+export const featureInfo: Ref<DipulFeature[]> = ref([]) // Array für Features
 export const dipulCheckActive = ref(true)
 export const dipulCheckRes = ref(5)
 
 
-export function handleKmlUpload(event) {
-    const file = event.target.files[0]
+export function handleKmlUpload(event: Event) {
+    const trgt = event.target as HTMLInputElement
+    if (trgt.files ==  null || trgt.files.length <= 0) {
+        return
+    }
+    const file = trgt.files[0]
     if (!file) return
+
+
     removeAllPins()
     const reader = new FileReader()
     reader.onload = function (e) {
@@ -86,23 +94,8 @@ function kmlStyle(feature: FeatureLike) {
     if(geom == null) return
 
 
-    if (geom.getType() === 'Point') {
+    if (geom instanceof Point) {
 
-        const fStyle = feature.getStyle()
-        let iconHref = null
-        if (fStyle != null) {
-
-            iconHref = fStyle && fStyle.getImage() && fStyle.getImage().getSrc();
-        }
-        if (iconHref) {
-            return new Style({
-                image: new Icon({
-                    src: iconHref,
-                    scale: 1.2,
-                }),
-            });
-        }
-        // Fallback: Einfacher Kreis
         return new Style({
             image: new CircleStyle({
                 radius: 7,
@@ -121,7 +114,7 @@ function kmlStyle(feature: FeatureLike) {
         })
     }
     // Flächen (z.B. Polygone)
-    if (geom.getType() === 'Polygon') {
+    if (geom instanceof Polygon) {
         const coords = geom.getCoordinates()
         const styles = []
 
@@ -153,8 +146,12 @@ export function removeKmlLayer() {
     }
 }
 
-export function handleShpUpload(event) {
-    const file = event.target.files[0]
+export function handleShpUpload(event: Event) {
+    const trgt = event.target as HTMLInputElement
+    if (trgt.files ==  null || trgt.files.length <= 0) {
+        return
+    }
+    const file = trgt.files[0]
     if (!file) return
 
 
@@ -247,28 +244,29 @@ export function removeShapefileLayer() {
 }
 
 export const allPolygonFeatures = computed(() => {
-    const features = []
+    const features:  Feature<Geometry>[] = []
     if (kmlLayer.value && kmlLayer.value.getSource()) {
 
         const src = kmlLayer.value.getSource()
-        if(src==null) return;
-
-        features.push(...src.getFeatures().filter(f => {
-            const t = f.getGeometry().getType()
-            return t === 'Polygon' || t === 'MultiPolygon'
-        }))
+        if(src!=null) {
+            features.push(...src.getFeatures().filter(f => {
+                const t = f.getGeometry()
+                return (t instanceof Polygon || t instanceof MultiPolygon)
+            }))
+        }
     }
     if (shapefileLayer.value && shapefileLayer.value.getSource()) {
 
         const src = shapefileLayer.value.getSource()
-        if(src==null) return;
-
-        features.push(...src.getFeatures().filter(f => {
-            const t = f.getGeometry().getType()
-            return t === 'Polygon' || t === 'MultiPolygon'
-        }))
+        if (src != null) {
+            features.push(...src.getFeatures().filter(f => {
+                const t = f.getGeometry()
+                return (t instanceof Polygon || t instanceof MultiPolygon)
+            }))
+        }
     }
-    // Nach Name sortieren
+
+
     return features.sort((a, b) => {
         const nameA = getFeatureName(a);
         const nameB = getFeatureName(b);
@@ -298,21 +296,31 @@ function getFeatureName(feature: Feature) {
 export const dipulZoneToFields = computed(() => {
     // Key: DIPUL-Feature-ID (oder Name)
     // Value: Array von Polygon-Features
-    const mapping = {}
+    const mapping: {[key: string]: {[key: string]:  Feature<Geometry>[]}} = {}
 
     if (allPolygonFeatures.value == undefined) return mapping
 
     allPolygonFeatures.value.forEach(fld => {
-        const fGeo  =fld.getGeometry()
-        if (fGeo === undefined) return
+        const fGeo  = fld.getGeometry()
+        if (fGeo === undefined || !(fGeo instanceof Polygon || fGeo instanceof MultiPolygon)) return
 
         const key = fld.getId() || JSON.stringify(fGeo.getCoordinates()[0][0])
-        const dipulList = polygonsWithDipul.value[key] || []
+
+        let dipulList: DipulFeature[] = [];
+        if (polygonsWithDipul.value) {
+            dipulList = polygonsWithDipul.value[key]
+        }
+
         dipulList.forEach(zone => {
             // Zonen-Namen/Feld als Key nehmen (z.B. zone.properties.type_code + zone.id)
             // Nutze am besten eine sprechende Anzeige
-            const zoneKey1 = zone.properties?.type_code
-            const zoneKey2 = (zone.properties?.name || zone.id)
+
+            if (zone.properties == null) {
+                return
+            }
+
+            const zoneKey1 = zone.properties.type_code
+            const zoneKey2 = (zone.properties.name || zone.id)
 
             if (!mapping[zoneKey1]) {
                 mapping[zoneKey1] = {}
@@ -326,11 +334,11 @@ export const dipulZoneToFields = computed(() => {
 })
 
 
-export function zoomToPolygon(feature) {
+export function zoomToPolygon(feature: Feature<Geometry>) {
     // Hole das Extent der Geometrie
     const geometry = feature.getGeometry()
     if (geometry) {
-        agMap.getView().fit(geometry, {
+        agMap.getView().fit(geometry as SimpleGeometry, {
             padding: [60, 60, 60, 60], // Ränder
             maxZoom: 18,               // nicht zu weit reinzoomen
             duration: 600,             // Animationseffekt
@@ -340,10 +348,14 @@ export function zoomToPolygon(feature) {
 
 
 // Funktion für GetFeatureInfo
-export function getFeatureInfo(coordinate, evt) {
+export function getFeatureInfo(coordinate: Coordinate) {
     const view = agMap.getView();
     const viewResolution = view.getResolution() ;
     const source = dipulWmsLayer.getSource();
+
+    if (source == null || viewResolution == null) {
+        return
+    }
 
     const url = source.getFeatureInfoUrl(
         coordinate,
@@ -363,20 +375,21 @@ export function getFeatureInfo(coordinate, evt) {
 
 
     fetch(url)
-        .then(r => r.json())                // <-- check console if this throws
+        .then(r => r.json())
         .then(json => {
-            featureInfo.value = json.features ?? []
+            const retVal = json  as DipulFeatureCollection
+            featureInfo.value = retVal.features ?? []
         })
 }
 
 
-export async function getDipulFeaturesForPolygon(polygonFeature) {
+export async function getDipulFeaturesForPolygon(polygonFeature: Feature<Geometry>) {
     const geom = polygonFeature.getGeometry()
-    let rings = []
+    let rings: Array<Coordinate>[] = []
 
-    if (geom.getType() === 'Polygon') {
+    if (geom instanceof Polygon) {
         rings = [geom.getCoordinates()[0]]
-    } else if (geom.getType() === 'MultiPolygon') {
+    } else if (geom instanceof MultiPolygon) {
         rings = geom.getCoordinates().map(coords => coords[0])
     }
 
@@ -388,7 +401,14 @@ export async function getDipulFeaturesForPolygon(polygonFeature) {
         for (const coordinate of testCoordinates) {
             console.log("Request features for: ", coordinate)
             addPinAt(coordinate)
-            const url = dipulWmsLayer.getSource().getFeatureInfoUrl(
+
+            let src: TileWMS
+            if (dipulWmsLayer.getSource() == null)  {return}
+            else {
+                src = dipulWmsLayer.getSource() as TileWMS
+            }
+
+            const url = src.getFeatureInfoUrl(
                 coordinate,
                 agMap.getView().getResolutionForZoom(18),
                 'EPSG:3857',
@@ -403,7 +423,7 @@ export async function getDipulFeaturesForPolygon(polygonFeature) {
             try {
                 const res = await fetch(url)
                 if (!res.ok) continue
-                const data = await res.json() as FeatureCollection
+                const data = await res.json() as DipulFeatureCollection
                 if (data.features && data.features.length > 0) {
                     // Füge alle gefundenen Feature-Objekte hinzu, ohne Duplikate (nach id)
                     data.features.forEach(feat => {

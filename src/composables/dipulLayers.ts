@@ -1,4 +1,4 @@
-import {type Ref, ref, watch} from "vue";
+import {type Ref, ref} from "vue";
 import TileLayer from "ol/layer/Tile";
 import TileWMS from "ol/source/TileWMS";
 
@@ -201,10 +201,7 @@ export function toggleLayer(layer: dipulLayer) {
         }
     }
 
-    if (dipulWmsLayer.getSource() === null)
-        return;
-
-    dipulWmsLayer.getSource().updateParams({
+    src.updateParams({
         LAYERS: activeDipulLayers.value.join(',')
     });
 }

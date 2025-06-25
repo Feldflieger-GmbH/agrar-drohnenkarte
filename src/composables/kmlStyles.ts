@@ -3,9 +3,9 @@ import Stroke from 'ol/style/Stroke'
 import Fill from 'ol/style/Fill'
 import CircleStyle from 'ol/style/Circle'
 import Polygon from "ol/geom/Polygon";
-import {Feature} from "ol";
 import Text from 'ol/style/Text'
 import type {FeatureLike} from "ol/Feature";
+import type {Coordinate} from "ol/coordinate";
 
 export const lineStyle = new Style({
     stroke: new Stroke({
@@ -39,7 +39,7 @@ export function polygonStyle(feature: FeatureLike) {
     })
 }
 
-export function polygonInnerStyle(coords) {
+export function polygonInnerStyle(coords: Coordinate[]) {
     return new Style({
         stroke: new Stroke({color: '#dc2626', width: 2, lineDash: [4, 4]}),
         fill: new Fill({color: 'rgba(255,255,255,0.8)'}),

@@ -63,12 +63,12 @@ onMounted(() => {
   // Click-Listener für GetFeatureInfo
   agMap.on('click', function (evt) {
     console.log('click')
-    getFeatureInfo(evt.coordinate, evt);
+    getFeatureInfo(evt.coordinate);
   });
   // Click-Listener für GetFeatureInfo
   agMap.on('singleclick', function (evt) {
     console.log('singleclick')
-    getFeatureInfo(evt.coordinate, evt);
+    getFeatureInfo(evt.coordinate);
   });
 
   dipulLayerGroups.value.forEach(group => {
@@ -91,7 +91,13 @@ watch([allPolygonFeatures, dipulCheckActive, dipulCheckRes], async ([features, c
   const results = {};
   const featurePromises = []
   for (const f of features) {
-    const id = f.getId().toString() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])
+
+    let fID;
+    if (f.getId() !== undefined) {
+      fID = f.getId().toString()
+    }
+
+    const id = fID || JSON.stringify(f.getGeometry().getCoordinates()[0][0])
     const p = getDipulFeaturesForPolygon(f).then(value => {
       results[id] = value
       if (value.length > 0) {

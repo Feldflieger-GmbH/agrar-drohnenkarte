@@ -154,11 +154,11 @@
             <div>
               <span class="font-semibold">DIPUL-Zonen:</span>
               <template
-                  v-if="polygonsWithDipul.length === 0 || polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])] === null">
+                  v-if="polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])] === null">
                 <span class="text-gray-400">⏳ Prüfung läuft…</span>
               </template>
               <template
-                  v-else-if="polygonsWithDipul.length > 0 && polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])].length === 0">
+                  v-else-if="polygonsWithDipul[f.getId() || JSON.stringify(f.getGeometry().getCoordinates()[0][0])].length === 0">
                 <span class="text-green-600 font-bold"> Keine</span>
               </template>
               <ul
