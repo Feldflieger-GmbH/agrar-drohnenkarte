@@ -209,8 +209,9 @@ function getDipulForFeature(f: {
 }) {
 
   let fID;
-  if (f.feature.getId() !== undefined) {
-    fID = f.feature.getId().toString()
+  let ID = f.feature.getId()
+  if (ID != undefined) {
+    fID = ID.toString()
   }
 
 
