@@ -33,6 +33,7 @@ import {
   getFeatureInfo,
   pinLayer, polygonsWithDipul, removeAllPins
 } from "./composables/customerMaps.js";
+import {registerContextMenuHandler} from "./composables/fieldOptimisatzion.js";
 
 
 
@@ -49,6 +50,7 @@ watch(dipulCheckShowPoints, (val) => {
 
 
 onMounted(() => {
+  console.log("main mounting")
   basemapSetup()
 
   agMap.setTarget(mapContainer.value)
@@ -57,12 +59,6 @@ onMounted(() => {
 
   // Click-Listener für GetFeatureInfo
   agMap.on('click', function (evt) {
-    console.log('click')
-    getFeatureInfo(evt.coordinate);
-  });
-  // Click-Listener für GetFeatureInfo
-  agMap.on('singleclick', function (evt) {
-    console.log('singleclick')
     getFeatureInfo(evt.coordinate);
   });
 
@@ -71,6 +67,8 @@ onMounted(() => {
       if (layer.checked) toggleLayer(layer)
     })
   })
+  registerContextMenuHandler()
+  console.log("main mounted done")
 })
 
 

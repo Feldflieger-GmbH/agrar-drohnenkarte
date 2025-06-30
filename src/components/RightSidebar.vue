@@ -3,7 +3,6 @@
          class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)]">
     <div class="flex-1 overflow-y-auto">
 
-      <h2 class="font-bold mb-2">Infos</h2>
 
       <h3 class="font-bold mb-2">SHP-Import (ZIP)</h3>
       <div class="mb-4">
@@ -45,7 +44,7 @@
 
 
       <div v-if="featureInfo.length" class="mb-4">
-        <h4 class="font-bold mb-2">Objekte an dieser Stelle:</h4>
+        <h3 class="font-bold mb-2">Objekte an dieser Stelle:</h3>
 
         <div v-for="f in featureInfo" :key="f.id" class="border rounded p-2">
           <p class="font-bold text-xl">{{ f.properties.type_code }}</p>
@@ -56,19 +55,17 @@
 
       </div>
 
-
       <!-- Liste nach Zonen -->
-      <div class="mb-6">
-        <h4 class="font-bold mb-2">Dipul-Zonen und betroffene Felder</h4>
+      <div class="mb-6" >
         <div class="mb-3 flex items-center gap-2">
-          <label for="dipulCheck">
-            <input id="dipulCheck" v-model="dipulCheckActive" class="form-checkbox" type="checkbox">
+          <label for="dipulCheck"  class="font-bold">
+            <input id="dipulCheck" v-model="dipulCheckActive" class="form-checkbox " type="checkbox">
             Dipul-Check Aktiv
           </label>
         </div>
         <div v-if="dipulCheckActive" class="mb-3 flex items-center gap-2">
           <label for="dipulCheckRes">
-            <input id="dipulCheckRes" v-model="dipulCheckRes" class="form-textbox" max="10" min="2" type="number">
+            <input id="dipulCheckRes" v-model="dipulCheckRes" class="form-textbox " max="10" min="2" type="number">
             Auflösung (jeder x-te punkt wird geprüft.)
           </label>
         </div>
@@ -114,7 +111,79 @@
         </div>
       </div>
 
+      <div class="space-y-2">
+        <button
+            class="flex items-center w-full py-1 focus:outline-none select-none group"
+            type="button"
+            @click="fieldOptimizationUI = !fieldOptimizationUI"
+        >
+          <!-- Chevron Icon -->
+          <svg :class="['w-4 h-4 mr-1 transition-transform', fieldOptimizationUI ? 'rotate-90' : '']"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 5l7 7-7 7" stroke-width="2"/>
+          </svg>
+          <span class="font-semibold">Datei-Optimierungen</span>
+        </button>
+
+      </div>
+      <div v-show="fieldOptimizationUI">
+
+        <div class="mb-3 flex items-center gap-2">
+          <label for="fildOptiShowNodes">
+            <input id="fildOptiShowNodes" v-model="showAllPoints" class="form-checkbox" type="checkbox">
+            Eckpunkte anzeigen
+          </label>
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+        <label for="tol" class="font-semibold">Toleranz:</label>
+        <input id="tol" type="number" v-model.number="simplifyTolerance"
+               class="border rounded p-1 w-12" step="5" min="1" />
+        <button @click="simplifyAllPolygons()"
+                class="px-3 py-1 rounded bg-green-600 text-white font-semibold hover:bg-green-700">
+          Felder vereinfachen
+        </button>
+      </div>
+        <div v-if="removedVertexCount > 0" class="text-green-700 font-semibold">
+          {{ removedVertexCount }} Punkt{{ removedVertexCount === 1 ? '' : 'e' }} entfernt!
+        </div>
+
+
+        <div class="mb-3">
+          <label class="block font-semibold text-sm mb-1">Präfix für Feldnamen:</label>
+          <input
+              type="text"
+              v-model="fieldPrefix"
+              class="border p-1 rounded w-full"
+              placeholder="z. B. Muster-"
+          />
+        </div>
+        <button
+            @click="downloadAsShapefile"
+            class="px-3 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+        >
+          Als ShapeFile herunterladen
+        </button>
+      </div>
+
+
       <!-- Flächenliste -->
+      <div class="space-y-2">
+        <button
+            class="flex items-center w-full py-1 focus:outline-none select-none group"
+            type="button"
+            @click="fieldListUI = !fieldListUI"
+        >
+          <!-- Chevron Icon -->
+          <svg :class="['w-4 h-4 mr-1 transition-transform', fieldListUI ? 'rotate-90' : '']"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 5l7 7-7 7" stroke-width="2"/>
+          </svg>
+          <span class="font-semibold">Flächenliste</span>
+        </button>
+
+      </div>
+      <div v-show="fieldListUI">
       <div v-if="allPolygonFeatures.length" class="mb-4">
         <h4 class="font-bold mb-2">Flächen auf der Karte</h4>
         <div class="font-bold mt-4">
@@ -184,6 +253,7 @@
         (Keine Flächen geladen)
       </div>
     </div>
+    </div>
 
   </aside>
 </template>
@@ -202,6 +272,21 @@ import {
 import type Polygon from "ol/geom/Polygon";
 import type {Feature} from "ol";
 import type {Geometry, MultiPolygon} from "ol/geom";
+import {onMounted, ref} from "vue";
+import {
+  removedVertexCount,
+  showAllPoints,
+  simplifyAllPolygons,
+  simplifyTolerance
+} from "../composables/fieldOptimisatzion.ts";
+import {downloadAsShapefile, fieldPrefix} from "../composables/shpDownloader.ts";
+
+
+
+onMounted(() => {
+  console.log("RightSidebar mounted")
+})
+
 
 function getDipulForFeature(f: {
   feature: Feature<Geometry>
@@ -219,4 +304,6 @@ function getDipulForFeature(f: {
   const v = polygonsWithDipul.value[key]
   return v;
 }
+const fieldOptimizationUI = ref(true)
+const fieldListUI = ref(true)
 </script>
