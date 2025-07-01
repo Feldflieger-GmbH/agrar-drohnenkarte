@@ -96,17 +96,21 @@ watch(FieldLayerListRef, () => {
 export function registerContextMenuHandler() {
     agMap.on('click', function (evt: MapBrowserEvent) {
         evt.preventDefault()
-        console.log("Remove Point")
         const allPointLayers = FieldLayerList.map(item => item.additionalLayers.edgePointLayer).filter(Boolean)
         agMap.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
             if (allPointLayers.includes(layer as VectorLayer) && feature.getGeometry()?.getType() === 'Point') {
                 const parentFeature = feature.get('parentFeature') as Feature<Polygon>
-                const idx = feature.get('vertexIndex') as number
-                console.log("remove point at idx", idx)
+                let idx = feature.get('vertexIndex') as number
                 if (!parentFeature || typeof idx !== 'number') return true
 
                 const geom = parentFeature.getGeometry() as Polygon
                 let coords = geom.getCoordinates()[0].slice()
+                //console.log("remove point at idx", idx, coords.length)
+
+                if (idx == coords.length-1) {
+                    idx = 0
+                }
+
                 if (coords.length <= 4) {
                     alert('Ein Polygon braucht mindestens 4 Punkte (inkl. Abschluss).')
                     return true
@@ -164,9 +168,8 @@ function simplifyPolygonCoords(coords: number[][], tolerance: number = 1e-8): nu
         const next = coords[(i + 1) % coords.length]
         if (!isCollinear(prev, curr, next, tolerance)) {
             simplified.push(curr)
-        } else {
-            console.log("Removed point", curr)
         }
+
     }
     simplified.push(coords[coords.length - 1]) // Abschluss
     // Immer auf min. 4 reduzieren!
