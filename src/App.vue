@@ -26,7 +26,7 @@ import LeftSidebar from "./components/LeftSidebar.vue";
 import {dipulLayerGroups, toggleLayer} from "./composables/dipulLayers.js";
 import {agMap, basemapSetup} from "./composables/basemap.js";
 import RightSidebar from "./components/RightSidebar.vue";
-import {registerContextMenuHandler} from "./composables/fieldOptimisatzion.js";
+import {registerContextMenuHandler, registerVertexMoveHandler} from "./composables/fieldOptimisatzion.js";
 import {getFeatureInfo} from "./composables/dipulFeature.js";
 
 
@@ -59,6 +59,7 @@ onMounted(() => {
     })
   })
   registerContextMenuHandler()
+  registerVertexMoveHandler();
   //dipulFeatureSetup()
   console.log("main mounted done")
 })

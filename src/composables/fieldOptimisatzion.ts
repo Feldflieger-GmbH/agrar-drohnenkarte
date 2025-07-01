@@ -11,6 +11,7 @@ import {FieldLayerList, FieldLayerListRef} from "./customerMaps.ts";
 import {agMap} from "./basemap.ts";
 import Polygon from "ol/geom/Polygon";
 import {MapBrowserEvent} from "ol";
+import {DragPan} from "ol/interaction";
 
 export const showEdgePoints = ref(false)
 export const simplifyTolerance = ref(25)
@@ -187,4 +188,67 @@ function isCollinear(a: number[], b: number[], c: number[], tolerance: number = 
         (b[1] - a[1]) * (c[0] - a[0])
     )
     return area < tolerance
+}
+
+
+
+let draggingVertex: {
+    feature: Feature,
+    layer: VectorLayer,
+    idx: number,
+    parentFeature: Feature<Polygon>
+} | null = null
+
+export function registerVertexMoveHandler() {
+    const dragPanInteraction = agMap.getInteractions().getArray().find(i => i instanceof DragPan) as DragPan;
+
+    agMap.on('pointerdown', function (evt: MapBrowserEvent) {
+        const allPointLayers = FieldLayerList.map(item => item.additionalLayers.edgePointLayer).filter(Boolean)
+        agMap.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+            if (
+                allPointLayers.includes(layer as VectorLayer) &&
+                feature.getGeometry()?.getType() === 'Point'
+            ) {
+                const parentFeature = feature.get('parentFeature') as Feature<Polygon>
+                let idx = feature.get('vertexIndex') as number
+                if (!parentFeature || typeof idx !== 'number') return true
+
+                if(feature instanceof Feature && layer instanceof VectorLayer) {
+                    draggingVertex = {feature, layer, idx, parentFeature}
+                    if (dragPanInteraction) dragPanInteraction.setActive(false);
+                }
+                return true
+            }
+        })
+    })
+
+    agMap.on('pointermove', function (evt: MapBrowserEvent) {
+
+        if (!draggingVertex) return
+
+        const geom = draggingVertex.parentFeature.getGeometry() as Polygon
+        let coords = geom.getCoordinates()[0].slice()
+
+        // Ensure idx is correct for polygons with closure point
+        let idx = draggingVertex.idx
+        if (idx === coords.length - 1) {
+            idx = 0
+        }
+
+        const newCoord = agMap.getCoordinateFromPixel(evt.pixel)
+        coords[idx] = newCoord
+
+        // Ensure closure point
+        if (!pointsEqual(coords[0], coords[coords.length - 1])) {
+            coords[coords.length - 1] = [...coords[0]]
+        }
+        geom.setCoordinates([coords])
+        recreatePointsLayer()
+    })
+
+    agMap.on('pointerup', function ()  {
+        draggingVertex = null
+
+        if (dragPanInteraction) dragPanInteraction.setActive(true);
+    })
 }
