@@ -7,16 +7,13 @@ import Style from 'ol/style/Style'
 import CircleStyle from 'ol/style/Circle'
 import Fill from 'ol/style/Fill'
 import Stroke from 'ol/style/Stroke'
-import {kmlLayer, shapefileLayer} from "./customerMaps.ts";
+import {FieldLayerList, FieldLayerListRef} from "./customerMaps.ts";
 import {agMap} from "./basemap.ts";
 import Polygon from "ol/geom/Polygon";
 import {MapBrowserEvent} from "ol";
-import {Geometry} from "ol/geom";
 
-export const showAllPoints = ref(false)
-let pointsLayer: VectorLayer | null = null
-
-export const simplifyTolerance = ref(25) // Startwert: sehr kleine Toleranz (in Karten-Einheiten)
+export const showEdgePoints = ref(false)
+export const simplifyTolerance = ref(25)
 export const removedVertexCount = ref(0)
 
 
@@ -42,58 +39,70 @@ function polygonVerticesFromLayer(layer: VectorLayer): Feature<Point>[] {
 }
 
 
-function createPointsLayer() {
-    const features = []
+function recreatePointsLayer() {
 
-    // Alle Polygone (aus KML und SHP) ablaufen:
-    if (kmlLayer.value) {
-        features.push(...polygonVerticesFromLayer(kmlLayer.value))
-    }
-    if (shapefileLayer.value) {
-        features.push(...polygonVerticesFromLayer(shapefileLayer.value))
-    }
+    for (const l of FieldLayerList) {
+        if (l.active) {
 
-    const source = new VectorSource({ features })
-    return new VectorLayer({
-        source,
-        zIndex: 200,
-        style: new Style({
-            image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#2563eb' }),   // Tailwind blue-600
-                stroke: new Stroke({ color: '#fff', width: 1 })
+            const features: Feature<Point>[] = []
+            features.push(...polygonVerticesFromLayer(l.layer))
+            if (l.additionalLayers.edgePointLayer) {
+                agMap.removeLayer(l.additionalLayers.edgePointLayer)
+            }
+
+            l.additionalLayers.edgePointLayer = new VectorLayer({
+                source: new VectorSource({ features }),
+                visible: showEdgePoints.value,
+                zIndex: 200,
+                style: new Style({
+                    image: new CircleStyle({
+                        radius: 5,
+                        fill: new Fill({ color: '#2563eb' }),   // Tailwind blue-600
+                        stroke: new Stroke({ color: '#fff', width: 1 })
+                    })
+                })
             })
-        })
-    })
+
+
+            if (l.additionalLayers.edgePointLayer != null) {
+                agMap.addLayer(l.additionalLayers.edgePointLayer)
+            }
+
+        }
+    }
 }
 
-watch(showAllPoints, (active) => {
-    if (active) {
-        pointsLayer = createPointsLayer()
-        agMap.addLayer(pointsLayer)
-    } else if (pointsLayer) {
-        agMap.removeLayer(pointsLayer)
-        pointsLayer = null
+watch(showEdgePoints, (val) => {
+    for (const l of FieldLayerList) {
+
+        if (val) {
+            recreatePointsLayer()
+        }
+        if (l.additionalLayers?.edgePointLayer != null) {
+            l.additionalLayers.edgePointLayer.setVisible(val)
+        }
     }
 })
 
 // Aktualisiere Punkte, wenn KML/SHP geladen/geändert werden:
-watch([kmlLayer, shapefileLayer], () => {
-    if (showAllPoints.value) {
-        if (pointsLayer) agMap.removeLayer(pointsLayer)
-        pointsLayer = createPointsLayer()
-        agMap.addLayer(pointsLayer)
+watch(FieldLayerListRef, () => {
+    console.log("Watcher2!")
+    if (showEdgePoints.value) {
+        recreatePointsLayer()
     }
-})
+},
+    { deep: true })
 
 export function registerContextMenuHandler() {
     agMap.on('click', function (evt: MapBrowserEvent) {
         evt.preventDefault()
         console.log("Remove Point")
+        const allPointLayers = FieldLayerList.map(item => item.additionalLayers.edgePointLayer).filter(Boolean)
         agMap.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-            if (layer === pointsLayer && feature.getGeometry()?.getType() === 'Point') {
+            if (allPointLayers.includes(layer as VectorLayer) && feature.getGeometry()?.getType() === 'Point') {
                 const parentFeature = feature.get('parentFeature') as Feature<Polygon>
                 const idx = feature.get('vertexIndex') as number
+                console.log("remove point at idx", idx)
                 if (!parentFeature || typeof idx !== 'number') return true
 
                 const geom = parentFeature.getGeometry() as Polygon
@@ -108,25 +117,13 @@ export function registerContextMenuHandler() {
                 }
                 geom.setCoordinates([coords])
 
-                updatePointsLayer(pointsLayer, [kmlLayer.value, shapefileLayer.value])
-
+                recreatePointsLayer()
                 return true
             }
         })
     })
 }
 
-function updatePointsLayer(pointsLayer: VectorLayer | null, polygonLayers: (VectorLayer<VectorSource<Feature<Geometry>>, Feature<Geometry>> | undefined)[]) {
-
-    const src = pointsLayer?.getSource()
-    src?.clear()
-
-
-    for (const pl of polygonLayers) {
-        if (pl != undefined)
-            src?.addFeatures(polygonVerticesFromLayer(pl))
-    }
-}
 
 function pointsEqual(a: number[], b: number[]): boolean {
     return a[0] === b[0] && a[1] === b[1]
@@ -134,7 +131,8 @@ function pointsEqual(a: number[], b: number[]): boolean {
 
 export function simplifyAllPolygons(): number {
 
-    const layers = [kmlLayer.value, shapefileLayer.value].filter(Boolean)
+    //const layers = [kmlLayer.value, shapefileLayer.value].filter(Boolean)
+    const layers = FieldLayerList.map(item => item.layer)
     const tolerance = simplifyTolerance.value
     let removed = 0
     for (const layer of layers) {
@@ -150,10 +148,13 @@ export function simplifyAllPolygons(): number {
         }
     }
 
-    updatePointsLayer(pointsLayer, [kmlLayer.value, shapefileLayer.value])
+
+    recreatePointsLayer()
     removedVertexCount.value = removed
     return removed
 }
+
+
 function simplifyPolygonCoords(coords: number[][], tolerance: number = 1e-8): number[][] {
     if (coords.length <= 4) return coords // nichts zu tun (mind. 4, inkl. Abschluss)
     const simplified = [coords[0]]

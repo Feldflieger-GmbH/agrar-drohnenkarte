@@ -8,7 +8,6 @@ import Map from 'ol/Map.js';
 import {Attribution} from "ol/control";
 import View from "ol/View";
 import {dipulWmsLayer} from "./dipulLayers.ts";
-import {geoBWWmsLayer} from "./geoBWLayer.ts";
 
 interface basemaps {
     name: string
@@ -50,7 +49,7 @@ export function basemapSetup() {
 
     agMap = new Map({
         controls: [new Attribution({collapsible: false})],
-        layers: [currentBaseLayer, dipulWmsLayer, geoBWWmsLayer], // Start mit aktueller Basemap
+        layers: [currentBaseLayer, dipulWmsLayer], // Start mit aktueller Basemap
         view: new View({
             center: [930000, 6640000],
             zoom: 8,

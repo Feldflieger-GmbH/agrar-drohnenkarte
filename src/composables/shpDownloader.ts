@@ -3,7 +3,7 @@ import * as shpwrite from '@mapbox/shp-write'
 
 import type {Feature} from "ol";
 import type Polygon from "ol/geom/Polygon";
-import {kmlLayer, shapefileLayer} from "./customerMaps.ts";
+import {FieldLayerList} from "./customerMaps.ts";
 import {ref} from "vue";
 import GeoJSON from "ol/format/GeoJSON";
 
@@ -11,6 +11,18 @@ export const fieldPrefix = ref('')
 
 function getAllPolygons(): Feature<Polygon>[] {
     const polys: Feature<Polygon>[] = []
+
+
+    // Alle Polygone (aus KML und SHP) ablaufen:
+    if (FieldLayerList) {
+        FieldLayerList.forEach(l => {
+            polys.push(...(l.layer.getSource()?.getFeatures()
+                .filter(f => f.getGeometry()?.getType().includes('Polygon')) as Feature<Polygon>[]))
+
+        })
+    }
+
+    /*
     if (kmlLayer.value) {
         polys.push(...(kmlLayer.value.getSource()?.getFeatures()
             .filter(f => f.getGeometry()?.getType().includes('Polygon')) as Feature<Polygon>[]))
@@ -18,7 +30,7 @@ function getAllPolygons(): Feature<Polygon>[] {
     if (shapefileLayer.value) {
         polys.push(...(shapefileLayer.value.getSource()?.getFeatures()
             .filter(f => f.getGeometry()?.getType().includes('Polygon')) as Feature<Polygon>[]))
-    }
+    }*/
     return polys
 }
 

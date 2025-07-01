@@ -2,6 +2,7 @@ import {ref, type Ref, watch} from "vue";
 import {type agMapLayerGroup, type dipulLayer} from "./dipulLayers.ts";
 import TileLayer from "ol/layer/Tile";
 import TileWMS from "ol/source/TileWMS";
+import {agMap} from "./basemap.ts";
 
 export const geobwOpacity: Ref<number> = ref(1) // 0 = ganz durchsichtig
 export const activeLayers = ref<string[]>([])
@@ -87,4 +88,12 @@ export function toggleGeoBWLayer(layer: dipulLayer) {
     src.updateParams({
         LAYERS: activeLayers.value.join(',')
     });
+
+    if (activeLayers.value.length === 0) {
+        agMap.removeLayer(geoBWWmsLayer)
+    } else {
+        if (!agMap.getLayers().getArray().includes(geoBWWmsLayer)) {
+            agMap.addLayer(geoBWWmsLayer)
+        }
+    }
 }

@@ -26,14 +26,9 @@ import LeftSidebar from "./components/LeftSidebar.vue";
 import {dipulLayerGroups, toggleLayer} from "./composables/dipulLayers.js";
 import {agMap, basemapSetup} from "./composables/basemap.js";
 import RightSidebar from "./components/RightSidebar.vue";
-import {
-  allPolygonFeatures,
-  dipulCheckActive,
-  dipulCheckRes, dipulCheckShowPoints, getDipulFeaturesForPolygon,
-  getFeatureInfo,
-  pinLayer, polygonsWithDipul, removeAllPins
-} from "./composables/customerMaps.js";
 import {registerContextMenuHandler} from "./composables/fieldOptimisatzion.js";
+import {getFeatureInfo} from "./composables/dipulFeature.js";
+
 
 
 
@@ -43,9 +38,6 @@ import {registerContextMenuHandler} from "./composables/fieldOptimisatzion.js";
 const mapContainer = ref(null)
 
 
-watch(dipulCheckShowPoints, (val) => {
-  pinLayer.setVisible(val)
-})
 
 
 
@@ -55,7 +47,6 @@ onMounted(() => {
 
   agMap.setTarget(mapContainer.value)
 
-  agMap.addLayer(pinLayer)
 
   // Click-Listener für GetFeatureInfo
   agMap.on('click', function (evt) {
@@ -68,16 +59,17 @@ onMounted(() => {
     })
   })
   registerContextMenuHandler()
+  //dipulFeatureSetup()
   console.log("main mounted done")
 })
 
 
 
 
-
-watch([allPolygonFeatures, dipulCheckActive, dipulCheckRes], async ([features, checkActive]) => {
+/*
+watch([FieldList, dipulCheckActive, dipulCheckRes], async ([features, checkActive]) => {
   if (!checkActive) {
-    polygonsWithDipul.value = {}
+    fieldsWithDipul.value = {}
     return
   }
   removeAllPins()
@@ -102,11 +94,11 @@ watch([allPolygonFeatures, dipulCheckActive, dipulCheckRes], async ([features, c
 
   }
   await Promise.all(featurePromises)
-  polygonsWithDipul.value = results
+  fieldsWithDipul.value = results
 }, {immediate: true})
 
 
-
+*/
 
 
 

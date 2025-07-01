@@ -4,42 +4,33 @@
     <div class="flex-1 overflow-y-auto">
 
 
-      <h3 class="font-bold mb-2">SHP-Import (ZIP)</h3>
+      <h3 class="font-bold mb-2">Geladene Karten</h3>
+
+      <ul>
+        <li v-for="layer in FieldLayerListRef" :key="layer.name">
+
+          <label for="fldvsbl"  class="font-bold">
+            <input id="fldvsbl" v-model="layer.active" v-on:change="toggleFieldLayerVisibility(layer.name)" class="form-checkbox " type="checkbox">
+            {{layer.name}}
+          </label>
+          <button
+              class="ml-4 pw-3 px-2 py-2 rounded bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition"
+              type="button" v-on:click="removeFieldLayer(layer)"
+          >
+            X
+          </button>
+        </li>
+
+      </ul>
+
+      <h3 class="font-bold mb-2">Datei-Import (SHP: Zip, KML)</h3>
       <div class="mb-4">
         <input
-            accept=".zip"
-            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
-            type="file"
-            @change="handleShpUpload"
-        />
-
-        <button
-            v-if="shapefileLayer"
-            class="mb-4 w-full px-3 py-2 rounded bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition"
-            type="button"
-            @click="removeShapefileLayer"
-        >
-          Shape-Layer entfernen
-        </button>
-      </div>
-
-
-      <h3 class="font-bold mb-2">KML-Import</h3>
-      <div class="mb-4">
-        <input
-            accept=".kml"
+            accept=".kml,.zip"
             class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             type="file"
-            @change="handleKmlUpload"
+            @change="handleFileUpload"
         />
-        <button
-            v-if="kmlLayer"
-            class="mt-2 mb-4 w-full px-3 py-2 rounded bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 transition"
-            type="button"
-            @click="removeKmlLayer"
-        >
-          KML-Layer entfernen
-        </button>
       </div>
 
 
@@ -75,9 +66,9 @@
             Prüfpunkte anzeigen
           </label>
         </div>
-        <div v-if="dipulCheckActive && Object.keys(dipulZoneToFields).length > 0">
+        <div v-if="dipulCheckActive && Object.keys(dipulZoneList).length > 0">
           <div
-              v-for="(zoneNameList, zoneCategory) in dipulZoneToFields"
+              v-for="(zoneNameList, zoneCategory) in dipulZoneList"
               :key="zoneCategory"
               class="mb-4"
           >
@@ -130,7 +121,7 @@
 
         <div class="mb-3 flex items-center gap-2">
           <label for="fildOptiShowNodes">
-            <input id="fildOptiShowNodes" v-model="showAllPoints" class="form-checkbox" type="checkbox">
+            <input id="fildOptiShowNodes" v-model="showEdgePoints" class="form-checkbox" type="checkbox">
             Eckpunkte anzeigen
           </label>
         </div>
@@ -184,17 +175,16 @@
 
       </div>
       <div v-show="fieldListUI">
-      <div v-if="allPolygonFeatures.length" class="mb-4">
-        <h4 class="font-bold mb-2">Flächen auf der Karte</h4>
+      <div v-if="FieldList.length" class="mb-4">
         <div class="font-bold mt-4">
           Flächenzahl:&nbsp;
-          {{ allPolygonFeatures.length }}
+          {{ FieldList.length }}
         </div>
-        <div class="font-bold mt-4">
+        <div class="font-bold">
           Gesamtfläche:&nbsp;
           {{
             (() => {
-              const sum = allPolygonFeatures.reduce(
+              const sum = FieldList.reduce(
                   (acc, f) => acc + getArea(f.geometry, {projection: 'EPSG:3857'}), 0
               )
               return (sum / 10000).toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ha'
@@ -203,7 +193,7 @@
         </div>
         <ul class="space-y-2">
           <li
-              v-for="(f, i) in allPolygonFeatures"
+              v-for="(f, i) in FieldList"
               :key="f.feature.getId() || i"
               class="border rounded p-2 bg-white shadow"
               @click="zoomToPolygon(f.feature)"
@@ -220,7 +210,7 @@
                 )
               }}
             </div>
-            <div>
+            <div v-if="dipulCheckActive">
               <span class="font-semibold">DIPUL-Zonen: </span>
               <template v-if="getDipulForFeature(f) === null">
                 <span class="text-gray-400">⏳ Prüfung läuft…</span>
@@ -260,14 +250,8 @@
 <script setup lang="ts">
 import {getArea} from "ol/sphere";
 import {
-  allPolygonFeatures,
-  dipulCheckActive,
-  dipulCheckRes, dipulCheckShowPoints, dipulZoneToFields, featureInfo,
-  handleKmlUpload,
-  handleShpUpload,
-  kmlLayer, polygonsWithDipul, removeKmlLayer,
-  removeShapefileLayer,
-  shapefileLayer, zoomToPolygon
+  FieldList, FieldLayerListRef,
+  removeFieldLayer, toggleFieldLayerVisibility, zoomToPolygon, handleFileUpload
 } from "../composables/customerMaps.ts";
 import type Polygon from "ol/geom/Polygon";
 import type {Feature} from "ol";
@@ -275,11 +259,17 @@ import type {Geometry, MultiPolygon} from "ol/geom";
 import {onMounted, ref} from "vue";
 import {
   removedVertexCount,
-  showAllPoints,
+  showEdgePoints,
   simplifyAllPolygons,
   simplifyTolerance
 } from "../composables/fieldOptimisatzion.ts";
 import {downloadAsShapefile, fieldPrefix} from "../composables/shpDownloader.ts";
+import {
+  dipulCheckActive,
+  dipulCheckRes,
+  dipulCheckShowPoints, dipulZoneList, featureInfo,
+  fieldsWithDipul
+} from "../composables/dipulFeature.ts";
 
 
 
@@ -301,7 +291,7 @@ function getDipulForFeature(f: {
 
 
   const key: string = fID || JSON.stringify(f.geometry.getCoordinates()[0][0]);
-  const v = polygonsWithDipul.value[key]
+  const v = fieldsWithDipul.value[key]
   return v;
 }
 const fieldOptimizationUI = ref(true)
