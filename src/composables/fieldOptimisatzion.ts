@@ -202,7 +202,8 @@ let draggingVertex: {
 export function registerVertexMoveHandler() {
     const dragPanInteraction = agMap.getInteractions().getArray().find(i => i instanceof DragPan) as DragPan;
 
-    agMap.on('pointerdown', function (evt: MapBrowserEvent) {
+    //@ts-ignore
+    agMap.on('pointerdown', function (evt: MapBrowserEvent<PointerEvent>) {
         const allPointLayers = FieldLayerList.map(item => item.additionalLayers.edgePointLayer).filter(Boolean)
         agMap.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
             if (
@@ -246,6 +247,7 @@ export function registerVertexMoveHandler() {
         recreatePointsLayer()
     })
 
+    //@ts-ignore
     agMap.on('pointerup', function ()  {
         draggingVertex = null
 
