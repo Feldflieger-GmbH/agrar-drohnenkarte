@@ -265,7 +265,8 @@ export async function getDipulFeaturesForPolygon(l: LayerListItem, polygonFeatur
 
 
 export const featureInfo: Ref<DipulFeature[]> = ref([]) // Array für Features
-// Funktion für GetFeatureInfo
+
+
 export function getFeatureInfo(coordinate: Coordinate) {
     const view = agMap.getView();
     const viewResolution = view.getResolution() ;
