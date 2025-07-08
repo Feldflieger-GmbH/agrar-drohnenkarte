@@ -42,7 +42,7 @@ export function polygonStyle(feature: FeatureLike) {
 export function polygonInnerStyle(coords: Coordinate[]) {
     return new Style({
         stroke: new Stroke({color: '#dc2626', width: 2, lineDash: [4, 4]}),
-        fill: new Fill({color: 'rgba(255,255,255,0.8)'}),
+        fill: new Fill({color: 'rgb(220,129,38,0.3)'}),
         geometry: new Polygon([coords]), // Nur Innenring
     })
 }
