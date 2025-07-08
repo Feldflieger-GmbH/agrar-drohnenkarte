@@ -67,41 +67,4 @@ onMounted(() => {
 
 
 
-/*
-watch([FieldList, dipulCheckActive, dipulCheckRes], async ([features, checkActive]) => {
-  if (!checkActive) {
-    fieldsWithDipul.value = {}
-    return
-  }
-  removeAllPins()
-  const results = {};
-  const featurePromises = []
-  for (const f of features) {
-
-    let fID;
-    if (f.feature.getId() !== undefined) {
-      fID = f.feature.getId().toString()
-    }
-
-    const id = fID || JSON.stringify(f.geometry.getCoordinates()[0][0])
-    const p = getDipulFeaturesForPolygon(f.feature).then(value => {
-      results[id] = value
-      if (value.length > 0) {
-        //break
-      }
-    })
-    featurePromises.push(p)
-
-
-  }
-  await Promise.all(featurePromises)
-  fieldsWithDipul.value = results
-}, {immediate: true})
-
-
-*/
-
-
-
-
 </script>
