@@ -47,16 +47,28 @@ export async function downloadAsShapefile() {
         polygons,
         {featureProjection: 'EPSG:3857', dataProjection: 'EPSG:4326'}
     )
+
+    let prefix = fieldPrefix.value ?? "felder"
+    if (prefix.length == 0) prefix = "felder"
+    if (prefix.length > 15) prefix = prefix.substring(0, 14)
+
     const options:  shpwrite.DownloadOptions & shpwrite.ZipOptions = {
         outputType: "blob",
-        compression: "DEFLATE"
+        compression: "DEFLATE",
+        types: {
+            polygon: prefix
+        },
 
     };
 
     // Präfix auf Name-Eigenschaft anwenden (und nur "name" Property exportieren)
     geojson.features.forEach((f, i) => {
         if (!f.properties) f.properties = {}
-        f.properties.name = replaceUmlaute(fieldPrefix.value + (f.properties.name ?? f.properties.NAME ?? f.properties.bez ?? (i + 1)))
+
+        let field_prefix = prefix + "-"
+        if(field_prefix == "felder-") field_prefix = ""
+
+        f.properties.name = replaceUmlaute(field_prefix + (f.properties.name ?? f.properties.NAME ?? f.properties.bez ?? (i + 1)))
         f.properties = {name: f.properties.name}
     })
 
@@ -81,7 +93,7 @@ export async function downloadAsShapefile() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'felder.zip'
+    a.download = "agrarkarte_" + prefix + '.zip'
     document.body.appendChild(a)
     a.click()
     a.remove()
