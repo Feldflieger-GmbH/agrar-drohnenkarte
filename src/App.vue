@@ -27,7 +27,7 @@
 
       <div :class="[
         'fixed md:relative inset-y-0 right-0 z-40 md:z-auto transform transition-transform duration-300',
-        'w-96',
+        'w-full md:w-96',
         rightSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
       ]">
         <RightSidebar />

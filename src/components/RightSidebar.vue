@@ -1,6 +1,6 @@
 <template>
   <aside aria-label="Customer-Data"
-         class="w-96 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)]">
+         class="w-full md:w-96 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)]">
     <div class="flex-1 overflow-y-auto">
 
       <!-- Basis-Karten -->
@@ -496,9 +496,9 @@ function getDipulForFeature(f: {
   return v;
 }
 const userFieldsUI = ref(true)
-const fieldOptimizationUI = ref(true)
+const fieldOptimizationUI = ref(false)
 const fieldListUI = ref(true)
 const dipulCheckUI = ref(true)
-const baseMapUI = ref(true)
+const baseMapUI = ref(false)
 const geoBWLayerUI = ref(false)
 </script>
