@@ -140,6 +140,8 @@
         </div>
 
 
+
+
         <div class="mb-3">
           <label class="block font-semibold text-sm mb-1">Präfix für Feldnamen:</label>
           <input
@@ -270,7 +272,6 @@ import {
   dipulCheckShowPoints, dipulZoneList, featureInfo,
   fieldsWithDipul
 } from "../composables/dipulFeature.ts";
-
 
 
 onMounted(() => {

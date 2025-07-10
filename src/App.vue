@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref, watch} from 'vue'
+import {onMounted, ref} from 'vue'
 import 'ol/ol.css'
 
 import HeaderBar from "./components/HeaderBar.vue";
