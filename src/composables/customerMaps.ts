@@ -172,6 +172,7 @@ export function handleFileUpload(event: Event) {
                     source: new VectorSource({features}),
                     style: fieldStyle
                 })
+                addLayer(newLayer, file)
             })
         } else if(file.name.endsWith(".kml")) {
             let kmlText = e.target.result as string
@@ -189,13 +190,9 @@ export function handleFileUpload(event: Event) {
                 }),
                 style: fieldStyle           // <- will now be called
             })
-
-        }
-
-        if(newLayer)
             addLayer(newLayer, file)
 
-
+        }
 
     }
 
