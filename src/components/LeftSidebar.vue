@@ -40,8 +40,8 @@
       <span class="font-semibold">DIPUL</span>
     </button>
 
-    </div>
-    <div v-show="dipulLayerUI">
+  </div>
+  <div v-show="dipulLayerUI">
 
       <div class="mb-4">
         <label class="block font-semibold mb-2">Transparenz:</label>
@@ -88,8 +88,9 @@
       </ul>
     </div>
   </div>
-  <div class="space-y-2">
 
+
+  <div class="space-y-2">
     <button
         class="flex items-center w-full py-1 focus:outline-none select-none group"
         type="button"
@@ -102,9 +103,7 @@
       </svg>
       <span class="font-semibold">GeoBW</span>
     </button>
-
     <div v-show="geoBWLayerUI">
-
       <div class="mb-4">
         <label class="block font-semibold mb-2">Transparenz:</label>
         <input

@@ -1,57 +1,250 @@
 <template>
   <aside aria-label="Customer-Data"
-         class="w-72 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)]">
+         class="w-96 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)]">
     <div class="flex-1 overflow-y-auto">
 
-
-      <h3 class="font-bold mb-2">Geladene Karten</h3>
-
-      <ul>
-        <li v-for="layer in FieldLayerListRef" :key="layer.name">
-
-          <label for="fldvsbl"  class="font-bold">
-            <input id="fldvsbl" v-model="layer.active" v-on:change="toggleFieldLayerVisibility(layer.name)" class="form-checkbox " type="checkbox">
-            {{layer.name}}
-          </label>
-          <button
-              class="ml-4 pw-3 px-2 py-2 rounded bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition"
-              type="button" v-on:click="removeFieldLayer(layer)"
-          >
-            X
-          </button>
-        </li>
-
-      </ul>
-
-      <h3 class="font-bold mb-2">Datei-Import (SHP: Zip, KML)</h3>
-      <div class="mb-4">
-        <input
-            accept=".kml,.zip"
-            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            type="file"
-            @change="handleFileUpload"
-        />
+      <!-- Basis-Karten -->
+      <div class="space-y-2">
+        <button
+            class="flex items-center w-full py-1 focus:outline-none select-none group"
+            type="button"
+            @click="baseMapUI = !baseMapUI"
+        >
+          <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', baseMapUI ? 'rotate-90' : '']"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 5l7 7-7 7" stroke-width="2"/>
+          </svg>
+          <span class="font-bold mb-2 text-lg">Basis-Karte</span>
+        </button>
       </div>
+      <div v-show="baseMapUI">
 
-
-      <div v-if="featureInfo.length" class="mb-4">
-        <h3 class="font-bold mb-2">Objekte an dieser Stelle:</h3>
-
-        <div v-for="f in featureInfo" :key="f.id" class="border rounded p-2">
-          <p class="font-bold text-xl">{{ f.properties.type_code }}</p>
-          <div v-for="(v, k) in f.properties" :key="k">
-            <span class="font-semibold">{{ k }}:</span> {{ v || '-' }}
-          </div>
+        <!-- Basemap -->
+        <div class="mb-2">
+          <label class="block font-semibold mb-2">Karte wählen:
+            <select v-model="selectedBasemap" class="w-full p-1 border rounded" @change="changeBasemap">
+              <option v-for="b in basemapList" :key="b.name" :value="b.name">{{ b.label }}</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label class="block">Transparenz:</label>
+          <input
+              v-model.number="baseOpacity"
+              class="w-full"
+              max="1"
+              min="0"
+              step="0.01"
+              type="range"
+          />
         </div>
 
+
+        <!-- Dipul-Layer -->
+        <div class="space-y-2">
+          <button
+              class="flex items-center w-full py-1 focus:outline-none select-none group"
+              type="button"
+              @click="dipulLayerUI = !dipulLayerUI"
+          >
+            <!-- Chevron Icon -->
+            <svg :class="['w-4 h-4 mr-1 transition-transform', dipulLayerUI ? 'rotate-90' : '']"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M9 5l7 7-7 7" stroke-width="2"/>
+            </svg>
+            <span class="font-semibold">DIPUL</span>
+          </button>
+        </div>
+        <div v-show="dipulLayerUI" class="pl-3 pr-2">
+          <label class="block">Transparenz:</label>
+          <input
+              v-model.number="dipulOpacity"
+              class="w-full"
+              max="1"
+              min="0"
+              step="0.01"
+              type="range"
+          />
+          <ul>
+            <li v-for="(group, _) in dipulLayerGroups" :key="group.name" class="">
+              <!-- Gruppenkopf -->
+              <button
+                  class="flex items-center w-full py-1 focus:outline-none select-none group"
+                  type="button"
+                  @click="group.expanded = !group.expanded"
+              >
+                <!-- Chevron Icon -->
+                <svg :class="['w-4 h-4 mr-1 transition-transform', group.expanded ? 'rotate-90' : '']"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 5l7 7-7 7" stroke-width="2"/>
+                </svg>
+                <!-- Farbpunkte (Gruppe) -->
+                <span :class="['w-3 h-3 rounded-full mr-2', group.icon]"></span>
+                <span class="font-semibold">{{ group.name }}</span>
+              </button>
+              <ul v-show="group.expanded" class="pl-7 mt-1 space-y-1">
+                <li v-for="layer in group.layers" :key="layer.wmsName" class="flex items-center">
+                  <!-- Checkbox -->
+                  <input
+                      v-model="layer.checked"
+                      class="form-checkbox accent-blue-500"
+                      type="checkbox"
+                      @change="toggleLayer(layer)"
+                  />
+                  <!-- Farbpunkte (Layer) -->
+                  <span :class="['w-3 h-3 rounded-full mx-2', layer.color]"></span>
+                  <span>{{ layer.name }}</span>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+
+        <!-- GeoBW-Layer -->
+        <div class="space-y-2">
+          <button
+              class="flex items-center w-full py-1 focus:outline-none select-none group"
+              type="button"
+              @click="geoBWLayerUI = !geoBWLayerUI"
+          >
+            <!-- Chevron Icon -->
+            <svg :class="['w-4 h-4 mr-1 transition-transform', geoBWLayerUI ? 'rotate-90' : '']"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M9 5l7 7-7 7" stroke-width="2"/>
+            </svg>
+            <span class="font-semibold">GeoBW</span>
+          </button>
+        </div>
+          <div v-show="geoBWLayerUI"  class="pl-3 pr-2">
+            <div>
+              <label class="block">Transparenz:</label>
+              <input
+                  v-model.number="geobwOpacity"
+                  class="w-full"
+                  max="1"
+                  min="0"
+                  step="0.01"
+                  type="range"
+              />
+            </div>
+            <ul>
+              <li v-for="(group, _) in geoBWLayerGroups" :key="group.name" class="">
+                <!-- Gruppenkopf -->
+                <button
+                    class="flex items-center w-full py-1 focus:outline-none select-none group"
+                    type="button"
+                    @click="group.expanded = !group.expanded"
+                >
+                  <!-- Chevron Icon -->
+                  <svg :class="['w-4 h-4 mr-1 transition-transform', group.expanded ? 'rotate-90' : '']"
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 5l7 7-7 7" stroke-width="2"/>
+                  </svg>
+                  <!-- Farbpunkte (Gruppe) -->
+                  <span :class="['w-3 h-3 rounded-full mr-2', group.icon]"></span>
+                  <span class="font-semibold">{{ group.name }}</span>
+                </button>
+                <ul v-show="group.expanded" class="pl-7 space-y-1">
+                  <li v-for="layer in group.layers" :key="layer.wmsName" class="flex items-center">
+                    <!-- Checkbox -->
+                    <input
+                        v-model="layer.checked"
+                        class="form-checkbox accent-blue-500"
+                        type="checkbox"
+                        @change="toggleGeoBWLayer(layer)"
+                    />
+                    <!-- Farbpunkte (Layer) -->
+                    <span :class="['w-3 h-3 rounded-full mx-2', layer.color]"></span>
+                    <span>{{ layer.name }}</span>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
       </div>
 
-      <!-- Liste nach Zonen -->
-      <div class="mb-6" >
+
+      <hr class="my-2" />
+      <!-- Benutzer-Karten -->
+      <div class="space-y-2">
+        <button
+            class="flex items-center w-full py-1 focus:outline-none select-none group"
+            type="button"
+            @click="userFieldsUI = !userFieldsUI"
+        >
+          <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', userFieldsUI ? 'rotate-90' : '']"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 5l7 7-7 7" stroke-width="2"/>
+          </svg>
+          <span class="font-bold mb-2 text-lg">Benutzer-Karten</span>
+        </button>
+      </div>
+      <div v-show="userFieldsUI">
+        <ul>
+          <li v-for="layer in FieldLayerListRef" :key="layer.name">
+
+            <label for="fldvsbl"  class="font-bold">
+              <input id="fldvsbl" v-model="layer.active" v-on:change="toggleFieldLayerVisibility(layer.name)" class="form-checkbox " type="checkbox">
+              {{layer.name}}
+            </label>
+            <button
+                class="ml-4 pw-3 px-2 py-3 rounded bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition"
+                type="button" v-on:click="removeFieldLayer(layer)"
+            >
+              X
+            </button>
+          </li>
+
+        </ul>
+
+        <h3 class="font-bold mb-2">Datei-Import (SHP: Zip, KML)</h3>
+        <div class="mb-4">
+          <input
+              accept=".kml,.zip"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              type="file"
+              @change="handleFileUpload"
+          />
+        </div>
+      </div>
+
+
+
+      <hr class="my-2" />
+      <!-- Dipul-Check -->
+      <div class="space-y-2">
+        <button
+            class="flex items-center w-full py-1 focus:outline-none select-none group"
+            type="button"
+            @click="dipulCheckUI = !dipulCheckUI"
+        >
+          <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', dipulCheckUI ? 'rotate-90' : '']"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M9 5l7 7-7 7" stroke-width="2"/>
+          </svg>
+          <span class="font-bold mb-2 text-lg">Dipul-Check</span>
+        </button>
+      </div>
+      <div v-show="dipulCheckUI">
+
+
+        <div v-if="featureInfo.length" class="mb-4">
+          <h3 class="font-bold mb-2">Objekte an dieser Stelle:</h3>
+
+          <div v-for="f in featureInfo" :key="f.id" class="border rounded p-2">
+            <p class="font-bold text-xl">{{ f.properties.type_code }}</p>
+            <div v-for="(v, k) in f.properties" :key="k">
+              <span class="font-semibold">{{ k }}:</span> {{ v || '-' }}
+            </div>
+          </div>
+
+        </div>
+
         <div class="mb-3 flex items-center gap-2">
           <label for="dipulCheck"  class="font-bold">
             <input id="dipulCheck" v-model="dipulCheckActive" class="form-checkbox " type="checkbox">
-            Dipul-Check Aktiv
+            Check Aktiv
           </label>
         </div>
         <div v-if="dipulCheckActive" class="mb-3 flex items-center gap-2">
@@ -102,6 +295,9 @@
         </div>
       </div>
 
+
+      <hr class="my-2" />
+      <!-- Optimierungen -->
       <div class="space-y-2">
         <button
             class="flex items-center w-full py-1 focus:outline-none select-none group"
@@ -109,11 +305,11 @@
             @click="fieldOptimizationUI = !fieldOptimizationUI"
         >
           <!-- Chevron Icon -->
-          <svg :class="['w-4 h-4 mr-1 transition-transform', fieldOptimizationUI ? 'rotate-90' : '']"
+          <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', fieldOptimizationUI ? 'rotate-90' : '']"
                fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
-          <span class="font-semibold">Datei-Optimierungen</span>
+          <span class="font-bold mb-2 text-lg">Optimierungen & Export</span>
         </button>
 
       </div>
@@ -160,6 +356,7 @@
       </div>
 
 
+      <hr class="my-2" />
       <!-- Flächenliste -->
       <div class="space-y-2">
         <button
@@ -168,13 +365,12 @@
             @click="fieldListUI = !fieldListUI"
         >
           <!-- Chevron Icon -->
-          <svg :class="['w-4 h-4 mr-1 transition-transform', fieldListUI ? 'rotate-90' : '']"
+          <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', fieldListUI ? 'rotate-90' : '']"
                fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
-          <span class="font-semibold">Flächenliste</span>
+          <span class="font-bold mb-2 text-lg">Flächenliste</span>
         </button>
-
       </div>
       <div v-show="fieldListUI">
       <div v-if="FieldList.length" class="mb-4">
@@ -249,6 +445,7 @@
 
   </aside>
 </template>
+
 <script setup lang="ts">
 import {getArea} from "ol/sphere";
 import {
@@ -272,6 +469,9 @@ import {
   dipulCheckShowPoints, dipulZoneList, featureInfo,
   fieldsWithDipul
 } from "../composables/dipulFeature.ts";
+import {basemapList, baseOpacity, changeBasemap, selectedBasemap} from "../composables/basemap.ts";
+import {dipulLayerGroups, dipulLayerUI, dipulOpacity, toggleLayer} from "../composables/dipulLayers.ts";
+import {geoBWLayerGroups, geobwOpacity, toggleGeoBWLayer} from "../composables/geoBWLayer.ts";
 
 
 onMounted(() => {
@@ -295,6 +495,10 @@ function getDipulForFeature(f: {
   const v = fieldsWithDipul.value[key]
   return v;
 }
+const userFieldsUI = ref(true)
 const fieldOptimizationUI = ref(true)
 const fieldListUI = ref(true)
+const dipulCheckUI = ref(true)
+const baseMapUI = ref(true)
+const geoBWLayerUI = ref(false)
 </script>
