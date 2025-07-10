@@ -1,5 +1,5 @@
 <template>
-<header class="bg-blue-900 text-white px-6 py-4 text-2xl font-bold shadow">
+<header class="bg-green-900 text-white px-6 py-4 text-2xl font-bold shadow">
   <div class="flex items-center justify-between">
     <!-- Logo/Title -->
     <div class="flex items-center flex-wrap">

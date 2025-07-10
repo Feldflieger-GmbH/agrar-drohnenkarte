@@ -23,7 +23,7 @@
 
       <!-- Right Sidebar with Overlay -->
       <div v-if="rightSidebarOpen" @click="rightSidebarOpen = false"
-           class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"></div>
+           class="fixed inset-0 z-40 md:hidden"></div>
 
       <div :class="[
         'fixed md:relative inset-y-0 right-0 z-40 md:z-auto transform transition-transform duration-300',
@@ -42,7 +42,6 @@ import {onMounted, ref} from 'vue'
 import 'ol/ol.css'
 
 import HeaderBar from "./components/HeaderBar.vue";
-import LeftSidebar from "./components/LeftSidebar.vue";
 import {dipulLayerGroups, toggleLayer} from "./composables/dipulLayers.js";
 import {agMap, basemapSetup} from "./composables/basemap.js";
 import RightSidebar from "./components/RightSidebar.vue";
@@ -53,11 +52,7 @@ import {getFeatureInfo} from "./composables/dipulFeature.js";
 
 
 
-const leftSidebarOpen = ref(false)
-const rightSidebarOpen = ref(false)
-
-
-
+const rightSidebarOpen = ref(true)
 const mapContainer = ref(null)
 
 
