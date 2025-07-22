@@ -13,4 +13,15 @@ RUN npm run build
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Copy nginx config if you have one
+# COPY nginx.conf /etc/nginx/nginx.conf
+
 EXPOSE 80
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
