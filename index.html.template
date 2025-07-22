@@ -7,16 +7,16 @@
     <title>Agrar-Drohnenkarte</title>
 
     <!-- Cookiebot -->
-    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="{{COOKIEBOT_ID}}" type="text/javascript"></script>
+    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="${COOKIEBOT_ID}" type="text/javascript"></script>
 
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{GA_ID}}"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script>
     <script>
-        if ('{{GA_ID}}' !== '{{GA_ID}}' && '{{GA_ID}}' !== '') {
+        if ('${GA_ID}' !== '${GA_ID}' && '${GA_ID}' !== '') {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '{{GA_ID}}');
+            gtag('config', '${GA_ID}');
         }
     </script>
 
