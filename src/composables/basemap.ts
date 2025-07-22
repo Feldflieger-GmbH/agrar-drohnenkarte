@@ -34,7 +34,7 @@ export const basemapList: basemaps[] = [
         layer: () => new TileLayer({
             source: new XYZ({
                 url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>"
+                attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>. Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
             })
         })
     }
@@ -58,7 +58,9 @@ export function basemapSetup() {
 
 
 
-};
+}
+
+
 
 // Aktualisiere die Layer-Opacity, wenn sich der Wert ändert:
 watch(baseOpacity, (val) => {
