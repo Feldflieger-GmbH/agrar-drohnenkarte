@@ -21,14 +21,18 @@ import Polygon from "ol/geom/Polygon";
 export interface LayerListItem {
     name: string
     layer: VectorLayer<VectorSource<Feature<Geometry>>>,
-    active: boolean,
+    layerActive: boolean,
     additionalLayers: {
         pointChecklayer?: VectorLayer
         edgePointLayer?: VectorLayer
+        ground_risk_buffer?: VectorLayer
+        contingency_volume?: VectorLayer
     },
     featureList: {
         feature: Feature<Geometry>
         geometry: Polygon | MultiPolygon
+        ground_risk_buffer?: Polygon | MultiPolygon
+        contingency_volume?: Polygon | MultiPolygon
     }[]
 }
 export const FieldLayerListRef: Ref<LayerListItem[]> = ref([])
@@ -64,6 +68,13 @@ export function removeFieldLayer(layerItemRef: LayerListItem) {
         agMap.removeLayer(layerItem.additionalLayers.edgePointLayer)
     }
 
+    if (layerItem.additionalLayers.contingency_volume) {
+        agMap.removeLayer(layerItem.additionalLayers.contingency_volume)
+    }
+    if (layerItem.additionalLayers.ground_risk_buffer) {
+        agMap.removeLayer(layerItem.additionalLayers.ground_risk_buffer)
+    }
+
 
     agMap.removeLayer(layerItem.layer)
     FieldLayerList.splice(index, 1)
@@ -75,18 +86,18 @@ export function toggleFieldLayerVisibility(layerName: string) {
     const layerItem = FieldLayerList.find((l) => l.name === layerName)
     const layerItemRef = FieldLayerListRef.value.find((l) => l.name === layerName)
     if (layerItem && layerItemRef) {
-        layerItem.active = layerItemRef.active
-        layerItem.layer.setVisible(layerItemRef.active)
+        layerItem.layerActive = layerItemRef.layerActive
+        layerItem.layer.setVisible(layerItemRef.layerActive)
 
-        if(layerItemRef.active) {
-            //if going active, show if enabled
+        if(layerItemRef.layerActive) {
+            //if going layerActive, show if enabled
             //layerItem.additionalLayers.edgePointLayer?.setVisible(showEdgePoints.value)
             //layerItem.additionalLayers.pointChecklayer?.setVisible(dipulCheckShowPoints.value)
 
         } else {
-            //if not acive, always hinde
-            layerItem.additionalLayers.edgePointLayer?.setVisible(layerItemRef.active)
-            layerItem.additionalLayers.pointChecklayer?.setVisible(layerItemRef.active)
+            //if not acive, always hine
+            layerItem.additionalLayers.edgePointLayer?.setVisible(layerItemRef.layerActive)
+            layerItem.additionalLayers.pointChecklayer?.setVisible(layerItemRef.layerActive)
         }
     }
 }
@@ -129,14 +140,14 @@ function addLayer(layer: VectorLayer, file: File) {
         layer: layer,
         featureList: features,
         additionalLayers: {},
-        active: true
+        layerActive: true
     })
     FieldLayerListRef.value.push({
         name: file.name,
         layer: layer,
         featureList: features,
         additionalLayers: {},
-        active: true
+        layerActive: true
     })
 
     console.log(FieldList)
@@ -246,6 +257,7 @@ export const FieldList = computed(() => {
     const features:  {
         feature: Feature<Geometry>
         geometry: Polygon | MultiPolygon
+        selected: boolean
     }[] = []
 
     console.log("Getting FieldList")
@@ -260,12 +272,13 @@ export const FieldList = computed(() => {
 
             features.push(...featureList.map(feature => ({
                 feature: feature,
-                geometry: feature.getGeometry() as Polygon | MultiPolygon
+                geometry: feature.getGeometry() as Polygon | MultiPolygon,
+                selected: l.layerActive
             })))
         }
     })
 
-    console.log("Getting FieldList: ")
+    console.log("Got FieldList: ")
     console.log(features.length)
     return features.sort((a, b) => {
         const nameA = getFeatureName(a.feature);

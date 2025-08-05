@@ -45,6 +45,13 @@ export const dipulCheckActive = ref(true)
 export const dipulCheckRes = ref(5)
 export const fieldsWithDipul: Ref<DipulFeatureMap> = ref({})
 
+// Progress tracking
+export const dipulCheckProgress = ref({
+  total: 0,
+  completed: 0,
+  inProgress: false
+})
+
 
 //export const dipulZoneList = computed(() => {
 
@@ -132,7 +139,7 @@ watch(dipulCheckShowPoints, (val) => {
     }
 })
 
-// check all polys for Dipul-Features on LAyerchange.
+// check all polys for Dipul-Features on Layerchange.
 watch([FieldLayerListRef, dipulCheckActive, dipulCheckRes], async () => {
     if(!FieldLayerListRef)
         return
@@ -140,14 +147,23 @@ watch([FieldLayerListRef, dipulCheckActive, dipulCheckRes], async () => {
     console.log("Watcher!")
     if (!dipulCheckActive.value) {
         fieldsWithDipul.value = {}
+        dipulCheckProgress.value = { total: 0, completed: 0, inProgress: false }
         return
     }
+    
+    // Reset progress
+    dipulCheckProgress.value.inProgress = true
+    dipulCheckProgress.value.completed = 0
+    dipulCheckProgress.value.total = 0
 
     const featurePromises = []
     const results: {[key: string]: DipulFeature[]} = {};
-
+    
+    // Count total fields to check
+    dipulCheckProgress.value.total = 0
     for (const l of FieldLayerList) {
-        if (l.active) {
+        if (l.layerActive) {
+            dipulCheckProgress.value.total += l.featureList.length;
 
 
 
@@ -178,6 +194,8 @@ watch([FieldLayerListRef, dipulCheckActive, dipulCheckRes], async () => {
                 const p = getDipulFeaturesForPolygon(l, f.feature).then(value => {
                     if  (value == null) return
                     results[fieldID] = value
+                    // Update progress
+                    dipulCheckProgress.value.completed++
                     if (value.length > 0) {
                         //break
                     }
@@ -192,6 +210,7 @@ watch([FieldLayerListRef, dipulCheckActive, dipulCheckRes], async () => {
 
     await Promise.all(featurePromises)
     fieldsWithDipul.value = results
+    dipulCheckProgress.value.inProgress = false
 },
     { deep: true })
 

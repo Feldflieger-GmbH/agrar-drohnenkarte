@@ -185,7 +185,7 @@
           <li v-for="layer in FieldLayerListRef" :key="layer.name">
 
             <label for="fldvsbl"  class="font-bold">
-              <input id="fldvsbl" v-model="layer.active" v-on:change="toggleFieldLayerVisibility(layer.name)" class="form-checkbox " type="checkbox">
+              <input id="fldvsbl" v-model="layer.layerActive" v-on:change="toggleFieldLayerVisibility(layer.name)" class="form-checkbox " type="checkbox">
               {{layer.name}}
             </label>
             <button
@@ -208,6 +208,9 @@
           />
         </div>
       </div>
+
+
+      <GRBCV_Check />
 
 
 
@@ -246,6 +249,11 @@
             <input id="dipulCheck" v-model="dipulCheckActive" class="form-checkbox " type="checkbox">
             Check Aktiv
           </label>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div v-if="dipulCheckActive && dipulCheckProgress.inProgress" class="mb-3">
+          <DipulProgressBar />
         </div>
         <div v-if="dipulCheckActive" class="mb-3 flex items-center gap-2">
           <label for="dipulCheckRes">
@@ -321,6 +329,8 @@
             Eckpunkte anzeigen
           </label>
         </div>
+        
+
 
         <div class="flex items-center gap-2 mb-3">
         <label for="tol" class="font-semibold">Toleranz:</label>
@@ -368,6 +378,8 @@
 
 
       <hr class="my-2" />
+
+
       <!-- Flächenliste -->
       <div class="space-y-2">
         <button
@@ -488,11 +500,13 @@ import {
   dipulCheckActive,
   dipulCheckRes,
   dipulCheckShowPoints, dipulZoneList, featureInfo,
-  fieldsWithDipul
+  fieldsWithDipul, dipulCheckProgress
 } from "../composables/dipulFeature.ts";
 import {basemapList, baseOpacity, changeBasemap, selectedBasemap} from "../composables/basemap.ts";
 import {dipulLayerGroups, dipulLayerUI, dipulOpacity, toggleLayer} from "../composables/dipulLayers.ts";
 import {geoBWLayerGroups, geobwOpacity, toggleGeoBWLayer} from "../composables/geoBWLayer.ts";
+import GRBCV_Check from "./sidebar/GRBCV_Check.vue";
+import DipulProgressBar from "./DipulProgressBar.vue";
 
 
 onMounted(() => {
@@ -543,4 +557,6 @@ const fieldListUI = ref(true)
 const dipulCheckUI = ref(true)
 const baseMapUI = ref(false)
 const geoBWLayerUI = ref(false)
+
+
 </script>
