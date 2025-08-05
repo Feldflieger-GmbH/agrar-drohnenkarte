@@ -202,7 +202,7 @@
         <div class="mb-4">
           <input
               accept=".kml,.zip"
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white font-semibold hover:bg-blue-700 transition"
               type="file"
               @change="handleFileUpload"
           />
@@ -297,7 +297,7 @@
 
 
       <hr class="my-2" />
-      <!-- Optimierungen -->
+      <!-- Optimierungen & Export -->
       <div class="space-y-2">
         <button
             class="flex items-center w-full py-1 focus:outline-none select-none group"
@@ -353,6 +353,17 @@
         >
           Als ShapeFile herunterladen
         </button>
+        <br />
+        <br />
+
+        <template v-if="isAuthenticated">
+          <button
+              @click="downloadAsShapefile"
+              class="px-3 py-1 mt-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+          >
+            Cloud-Export
+          </button>
+        </template>
       </div>
 
 
@@ -441,6 +452,16 @@
         (Keine Flächen geladen)
       </div>
     </div>
+
+      <template v-if="isAuthenticated">
+        <span class="text-gray-400">Angemeldet!</span>
+      </template>
+      <template v-else>
+        <div  class="text-gray-400 italic">
+          (nicht authentifiziert)
+        </div>
+      </template>
+
     </div>
 
   </aside>
@@ -477,6 +498,27 @@ import {geoBWLayerGroups, geobwOpacity, toggleGeoBWLayer} from "../composables/g
 onMounted(() => {
   console.log("RightSidebar mounted")
 })
+
+
+
+const isAuthenticated = ref(false)
+async function checkAuthStatus() {
+  try {
+    const response = await fetch('https://localhost:8443/api/protected', {
+      credentials: 'include'
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+
+// Check auth when component mounts
+onMounted(async () => {
+  isAuthenticated.value = await checkAuthStatus();
+
+});
 
 
 function getDipulForFeature(f: {
