@@ -361,7 +361,14 @@
             @click="downloadAsShapefile"
             class="px-3 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
         >
-          Als ShapeFile herunterladen
+          Als ShapeFile für DJI herunterladen
+        </button>
+        <br />
+        <button
+            @click="downloadFieldsWithBuffersAsKML"
+            class="px-3 py-1 mt-1 rounded bg-green-600 text-white font-semibold hover:bg-green-700 transition"
+        >
+          Als KML mit GRB/CV herunterladen
         </button>
         <br />
         <br />
@@ -496,6 +503,7 @@ import {
   simplifyTolerance
 } from "../composables/fieldOptimisatzion.ts";
 import {downloadAsShapefile, fieldPrefix} from "../composables/shpDownloader.ts";
+import {downloadFieldsWithBuffersAsKML} from "../composables/kmlDownloader.ts";
 import {
   dipulCheckActive,
   dipulCheckRes,

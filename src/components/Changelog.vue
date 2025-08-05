@@ -15,6 +15,13 @@
         </ul>
       </div>
       
+      <div v-if="version.changed && version.changed.length" class="mt-2">
+        <h4 class="font-medium text-orange-700">Changed</h4>
+        <ul class="list-disc ml-5">
+          <li v-for="(item, i) in version.changed" :key="i" class="text-sm">{{ item }}</li>
+        </ul>
+      </div>
+      
       <div v-if="version.fixed && version.fixed.length" class="mt-2">
         <h4 class="font-medium text-blue-700">Fixed</h4>
         <ul class="list-disc ml-5">
@@ -27,6 +34,22 @@
 
 <script setup lang="ts">
 const versions = [
+  {
+    version: "0.3.0",
+    date: "2025-08-05",
+    added: [
+      "KML-Export-Funktion für Felder mit Ground Risk Buffer (GRB) und Contingency Volume (CV) Daten",
+      "Styled KML-Ausgabe mit farbkodierten Polygonen passend zum visuellen Schema der Anwendung",
+      "Intelligentes Label-Positionierungssystem zur Vermeidung von Textüberlappungen",
+      "Professionelle KML-Struktur mit ordnungsgemäßen Metadaten und Beschreibungen",
+      "Validierung zur Sicherstellung, dass GRB/CV-Berechnungen vor dem Export vorhanden sind",
+      "Enhanced Download-Button: 'Als KML mit GRB/CV herunterladen' im Export-Bereich"
+    ],
+    fixed: [ ],
+    changed: [
+      "Shapefile-Download-Button-Text auf 'Als ShapeFile für DJI herunterladen' für mehr Klarheit aktualisiert",
+    ]
+  },
   {
     version: "0.2.0",
     date: "2025-08-05",
