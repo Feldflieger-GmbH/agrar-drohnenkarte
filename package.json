@@ -1,7 +1,8 @@
 {
   "name": "agrar-drohnenkarte",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +12,7 @@
   "dependencies": {
     "@mapbox/shp-write": "^0.4.3",
     "@tailwindcss/vite": "^4.1.10",
+    "@turf/turf": "^7.2.0",
     "ol": "^10.5.0",
     "shp-write": "^0.3.2",
     "shpjs": "^6.1.0",

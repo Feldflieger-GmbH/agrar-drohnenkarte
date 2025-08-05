@@ -1,5 +1,7 @@
 # Agrar Drohnenkarte
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Die Applikation erlaubt es KML, SHP und ähnliche Dateien einzulesen.
 Die Polygone / Felder Werden auf der Karte mit Dipul-Overlay angezeigt.
 
@@ -14,3 +16,12 @@ GetFeatureInfo liefert Details beim Klick auf die Karte.
 - Responsive 3-Spalten-Layout mit Tailwind CSS
 - GetFeatureInfo (Objektinfos per Kartenklick, JSON-Ausgabe)
 - Docker-Deployment für Produktion
+- Ground Risk Buffer (GRB) und Contingency Volume (CV) Berechnung nach LBA-Richtlinien
+
+## Credits
+
+Dieses Projekt verwendet verschiedene Open-Source-Bibliotheken. Details zu den verwendeten Bibliotheken und deren Lizenzen finden Sie in der [CREDITS.md](CREDITS.md) Datei.
+
+## Changelog
+
+Eine vollständige Liste der Änderungen finden Sie in der [CHANGELOG.md](CHANGELOG.md) Datei.
