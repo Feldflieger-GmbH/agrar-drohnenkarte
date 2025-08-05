@@ -37,6 +37,7 @@ const versions = [
       "Visualisierung von GRB und CV als Pufferzonen um Felder",
       "Löschen-Button zum Entfernen der Puffervisualisierungen",
       "Referenz zu LBA-Richtlinien mit verwendeten Annahmen",
+      "Fortschrittsanzeige für DIPUL-Feature-Prüfung",
       "Implementierung mit Unterstützung von Amazon Q AI"
     ],
     fixed: [ ]

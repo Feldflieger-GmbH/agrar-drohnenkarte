@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Visualization of GRB and CV as buffer zones around fields
 - Delete button to remove buffer visualizations
 - Reference to LBA guidelines with assumptions used in calculations
+- Progress bar for DIPUL feature checking
 - Implementation assisted by Amazon Q AI
 
 

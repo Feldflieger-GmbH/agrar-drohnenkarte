@@ -250,6 +250,11 @@
             Check Aktiv
           </label>
         </div>
+        
+        <!-- Progress Bar -->
+        <div v-if="dipulCheckActive && dipulCheckProgress.inProgress" class="mb-3">
+          <DipulProgressBar />
+        </div>
         <div v-if="dipulCheckActive" class="mb-3 flex items-center gap-2">
           <label for="dipulCheckRes">
             <input id="dipulCheckRes" v-model="dipulCheckRes" class="form-textbox " max="10" min="2" type="number">
@@ -474,12 +479,13 @@ import {
   dipulCheckActive,
   dipulCheckRes,
   dipulCheckShowPoints, dipulZoneList, featureInfo,
-  fieldsWithDipul
+  fieldsWithDipul, dipulCheckProgress
 } from "../composables/dipulFeature.ts";
 import {basemapList, baseOpacity, changeBasemap, selectedBasemap} from "../composables/basemap.ts";
 import {dipulLayerGroups, dipulLayerUI, dipulOpacity, toggleLayer} from "../composables/dipulLayers.ts";
 import {geoBWLayerGroups, geobwOpacity, toggleGeoBWLayer} from "../composables/geoBWLayer.ts";
 import GRBCV_Check from "./sidebar/GRBCV_Check.vue";
+import DipulProgressBar from "./DipulProgressBar.vue";
 
 
 onMounted(() => {
