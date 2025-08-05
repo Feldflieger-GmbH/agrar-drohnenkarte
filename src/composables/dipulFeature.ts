@@ -132,7 +132,7 @@ watch(dipulCheckShowPoints, (val) => {
     }
 })
 
-// check all polys for Dipul-Features on LAyerchange.
+// check all polys for Dipul-Features on Layerchange.
 watch([FieldLayerListRef, dipulCheckActive, dipulCheckRes], async () => {
     if(!FieldLayerListRef)
         return
@@ -147,7 +147,7 @@ watch([FieldLayerListRef, dipulCheckActive, dipulCheckRes], async () => {
     const results: {[key: string]: DipulFeature[]} = {};
 
     for (const l of FieldLayerList) {
-        if (l.active) {
+        if (l.layerActive) {
 
 
 

@@ -59,7 +59,7 @@ function polygonVerticesFromLayer(layer: VectorLayer): Feature<Point>[] {
 function recreatePointsLayer() {
 
     for (const l of FieldLayerList) {
-        if (l.active) {
+        if (l.layerActive) {
 
             const features: Feature<Point>[] = []
             features.push(...polygonVerticesFromLayer(l.layer))

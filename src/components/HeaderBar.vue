@@ -17,6 +17,9 @@
 
     <!-- Desktop Links -->
     <div class="hidden md:flex items-center space-x-4">
+      <button @click="showChangelog = true" class="font-light text-sm hover:underline">
+        Changelog
+      </button>
       <a href="https://feldflieger.eu" target="_blank" class="font-light text-sm hover:underline">
         https://feldflieger.eu
       </a>
@@ -39,6 +42,9 @@
   <!-- Mobile Menu -->
   <div v-if="mobileMenuOpen" class="md:hidden mt-4 pt-4 border-t border-blue-800">
     <div class="space-y-2">
+      <button @click="showChangelog = true" class="block text-sm hover:underline">
+        Changelog
+      </button>
       <a href="https://feldflieger.eu" target="_blank" class="block text-sm hover:underline">
         https://feldflieger.eu
       </a>
@@ -56,11 +62,30 @@
     </div>
   </div>
 </header>
+
+  <!-- Changelog Modal -->
+  <div v-if="showChangelog" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h2 class="text-xl font-bold">Changelog</h2>
+        <button @click="showChangelog = false" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-4">
+        <Changelog />
+      </div>
+    </div>
+  </div>
 </template>
 
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import Changelog from './Changelog.vue'
 
 const mobileMenuOpen = ref(false)
+const showChangelog = ref(false)
 </script>
