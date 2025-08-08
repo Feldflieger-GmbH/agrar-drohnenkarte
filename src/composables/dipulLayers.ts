@@ -150,7 +150,13 @@ export const dipulLayerGroups: Ref<agMapLayerGroup[]> = ref([
                 name: "Temporäre Betriebseinschränkungen",
                 wmsName: "dipul:temporaere_betriebseinschraenkungen",
                 color: 'bg-red-200',
-                checked: true
+                checked: false
+            },
+            {
+                name: "Temporäre inaktive Betriebseinschränkungen",
+                wmsName: "dipul:inaktive_temporaere_betriebseinschraenkungen",
+                color: 'bg-red-200',
+                checked: false
             },
         ]
     },
