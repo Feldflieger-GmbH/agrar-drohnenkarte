@@ -25,10 +25,10 @@
         <DipulProgressBar />
       </div>
       <div v-if="dipulCheckActive" class="mb-3 flex items-center gap-2">
-        <label for="dipulCheckRes">
-          <input id="dipulCheckRes" v-model="dipulCheckRes" class="form-textbox " max="10" min="2" type="number">
-          Auflösung (jeder x-te punkt wird geprüft.)
-        </label>
+
+        <input id="dipulCheckRes" v-model="dipulCheckRes" class="border rounded p-1 w-16" max="10" min="2" type="number">
+        <label for="dipulCheckRes"> Auflösung (jeder x-te punkt wird geprüft.)         </label>
+
       </div>
       <div v-if="dipulCheckActive" class="mb-3 flex items-center gap-2">
         <label for="dipulCheckShowPoints">
