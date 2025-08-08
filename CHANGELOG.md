@@ -28,6 +28,18 @@ All notable changes to this project will be documented in this file.
 - Added separate point-based label features with invisible icons
 - Enhanced regex-based styling system for KML post-processing
 
+## [0.3.0] - 2025-01-27
+
+### Added
+- Help tooltips for major sections in the right sidebar
+- Interactive "i" icons that show contextual help on hover/tap
+- Improved user guidance for all main features
+- Better accessibility with explanatory tooltips
+- Separated Export & Optimisation
+- Redesign Sidebar
+- Introduced Template to remove repeating code
+- Show progress for dipul-check based on points to check
+
 ## [0.2.0] - 2025-08-05
 
 ### Added

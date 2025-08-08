@@ -68,7 +68,7 @@ export const showGroundRiskBuffer = ref(false);
 
 // Default values
 let v0Value = 36; // km/h (10 m/s = 36 km/h)
-let cdValue = 3.15; // Characteristic dimension
+let cdValue = 3.25; // Characteristic dimension
 let flightHeightValue = 100; // Flight height in meters
 
 // Functions to set values

@@ -159,11 +159,25 @@ watch([FieldLayerListRef, dipulCheckActive, dipulCheckRes], async () => {
     const featurePromises = []
     const results: {[key: string]: DipulFeature[]} = {};
     
-    // Count total fields to check
+    // Count total points to check
     dipulCheckProgress.value.total = 0
     for (const l of FieldLayerList) {
         if (l.layerActive) {
-            dipulCheckProgress.value.total += l.featureList.length;
+            for (const f of l.featureList) {
+                const geom = f.feature.getGeometry()
+                let rings: Array<Coordinate>[] = []
+                
+                if (geom instanceof Polygon) {
+                    rings = [geom.getCoordinates()[0]]
+                } else if (geom instanceof MultiPolygon) {
+                    rings = geom.getCoordinates().map(coords => coords[0])
+                }
+                
+                for (const exteriorRing of rings) {
+                    const testCoordinates = exteriorRing.filter((_, idx) => idx % dipulCheckRes.value === 0)
+                    dipulCheckProgress.value.total += testCoordinates.length
+                }
+            }
 
 
 
@@ -194,11 +208,6 @@ watch([FieldLayerListRef, dipulCheckActive, dipulCheckRes], async () => {
                 const p = getDipulFeaturesForPolygon(l, f.feature).then(value => {
                     if  (value == null) return
                     results[fieldID] = value
-                    // Update progress
-                    dipulCheckProgress.value.completed++
-                    if (value.length > 0) {
-                        //break
-                    }
                 })
                 featurePromises.push(p)
 
@@ -256,11 +265,17 @@ export async function getDipulFeaturesForPolygon(l: LayerListItem, polygonFeatur
                     feature_count: 100
                 }
             )
-            if (!url) continue
+            if (!url) {
+                dipulCheckProgress.value.completed++
+                continue
+            }
 
             try {
                 const res = await fetch(url)
-                if (!res.ok) continue
+                if (!res.ok) {
+                    dipulCheckProgress.value.completed++
+                    continue
+                }
                 const data = await res.json() as DipulFeatureCollection
                 if (data.features && data.features.length > 0) {
                     // Füge alle gefundenen Feature-Objekte hinzu, ohne Duplikate (nach id)
@@ -271,8 +286,10 @@ export async function getDipulFeaturesForPolygon(l: LayerListItem, polygonFeatur
                         }
                     })
                 }
-            } catch (e) { /* ignorieren */
-            }
+            } catch (e) { /* ignorieren */ }
+            
+            // Increment progress after each point is checked
+            dipulCheckProgress.value.completed++
 
 
         }
