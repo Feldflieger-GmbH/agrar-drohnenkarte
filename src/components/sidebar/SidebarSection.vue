@@ -25,7 +25,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import HelpTooltip from "../HelpTooltip.vue"
-import ExportSection from "./ExportSection.vue";
 
 interface Props {
   title: string

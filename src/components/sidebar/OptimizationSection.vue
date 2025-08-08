@@ -1,6 +1,6 @@
 <template>
   <SidebarSection 
-    title="Optimierungen" 
+    title="Bearbeiten"
     help-text="Eckpunkte anzeigen, um die Flächen zu bearbeiten. Linksklick zum löschen von Punkten."
   >
       <div class="mb-3 flex items-center gap-2">
@@ -18,6 +18,9 @@
                 class="px-3 py-1 rounded bg-green-600 text-white font-semibold hover:bg-green-700">
           Felder vereinfachen
         </button>
+        <HelpTooltip>
+          Findet und entfernt überflüssige Punkte. Höhere Toleranz entfernt mehr Punkte.
+        </HelpTooltip>
       </div>
       <div v-if="removedVertexCount > 0" class="text-green-700 font-semibold">
         {{ removedVertexCount }} Punkt{{ removedVertexCount === 1 ? '' : 'e' }} entfernt!
@@ -28,4 +31,5 @@
 <script setup lang="ts">
 import { removedVertexCount, showEdgePoints, simplifyAllPolygons, simplifyTolerance } from "../../composables/fieldOptimisatzion.ts"
 import SidebarSection from "./SidebarSection.vue"
+import HelpTooltip from "../HelpTooltip.vue";
 </script>
