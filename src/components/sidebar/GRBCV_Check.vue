@@ -13,6 +13,9 @@
           <path d="M9 5l7 7-7 7" stroke-width="2"/>
         </svg>
         <span class="font-bold mb-2 text-lg">Betriebsvolumen (GRB, CV)</span>
+        <HelpTooltip>
+          Berechnen des "Ground Risk Buffers" und "Contingency-Volumes"
+        </HelpTooltip>
       </button>
     </div>
     <div v-show="grbcvUI">
@@ -39,6 +42,9 @@
         <label for="cdValue" class="font-semibold">Characteristic Dimension (m):</label>
         <input id="cdValue" type="number" v-model.number="cd" 
                class="border rounded p-1 w-16" step="0.1" min="0" />
+        <HelpTooltip>
+          3.25m für T25
+        </HelpTooltip>
       </div>
       
       <div class="mb-3 flex items-center gap-2">
@@ -100,6 +106,7 @@ import {
   getCalculatedValues,
   deleteAllBuffers
 } from '../../composables/contingencyVolume';
+import HelpTooltip from "../HelpTooltip.vue";
 
 const grbcvUI = ref(false);
 const v0 = ref(12); // Default value 25 km/h (approximately 7 m/s)

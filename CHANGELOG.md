@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.3.0] - 2025-01-27
+
+### Added
+- Help tooltips for major sections in the right sidebar
+- Interactive "i" icons that show contextual help on hover/tap
+- Improved user guidance for all main features
+- Better accessibility with explanatory tooltips
+
+
 ## [0.2.0] - 2025-08-05
 
 ### Added

@@ -1,7 +1,7 @@
 <template>
   <aside aria-label="Customer-Data"
-         class="w-full md:w-96 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)]">
-    <div class="flex-1 overflow-y-auto">
+         class="w-full md:w-96 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)] overflow-visible">
+    <div class="flex-1 overflow-y-auto overflow-x-visible">
 
       <!-- Basis-Karten -->
       <div class="space-y-2">
@@ -15,6 +15,9 @@
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
           <span class="font-bold mb-2 text-lg">Basis-Karte</span>
+          <HelpTooltip>
+            Wählen Sie hier die Grundkarte aus (OpenStreetMap oder Satellit) und passen Sie die Transparenz der Kartenebenen an.
+          </HelpTooltip>
         </button>
       </div>
       <div v-show="baseMapUI">
@@ -178,6 +181,9 @@
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
           <span class="font-bold mb-2 text-lg">Benutzer-Karten</span>
+          <HelpTooltip>
+            Laden Sie eigene KML- oder SHP-Dateien (als ZIP) hoch, um Ihre Felder und Flächen auf der Karte anzuzeigen.
+          </HelpTooltip>
         </button>
       </div>
       <div v-show="userFieldsUI">
@@ -227,6 +233,9 @@
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
           <span class="font-bold mb-2 text-lg">Dipul-Check</span>
+          <HelpTooltip>
+            Prüfen Sie Ihre Flächen automatisch auf Überschneidungen mit DIPUL-Zonen. Aktivieren Sie den Check und passen Sie die Auflösung an.
+          </HelpTooltip>
         </button>
       </div>
       <div v-show="dipulCheckUI">
@@ -266,6 +275,9 @@
             <input id="dipulCheckShowPoints" v-model="dipulCheckShowPoints" class="form-checkbox" type="checkbox">
             Prüfpunkte anzeigen
           </label>
+          <HelpTooltip>
+            Zeigt an, an welchen Stellen auf Dipul-Zonen geprüft wurde.
+          </HelpTooltip>
         </div>
         <div v-if="dipulCheckActive && Object.keys(dipulZoneList).length > 0">
           <div
@@ -318,6 +330,9 @@
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
           <span class="font-bold mb-2 text-lg">Optimierungen & Export</span>
+          <HelpTooltip>
+            Eckpunkte der Felder anzeigen, um sie zu vereinfachen. Linksklick auf Punkte, um sie zu löschen. Export in verschiedenen Formaten.
+          </HelpTooltip>
         </button>
 
       </div>
@@ -340,6 +355,9 @@
                 class="px-3 py-1 rounded bg-green-600 text-white font-semibold hover:bg-green-700">
           Felder vereinfachen
         </button>
+          <HelpTooltip>
+            Entfernt automatisch überflüssige Eckpunkte. Höhere Toleranz entfernt mehr Punkte.
+          </HelpTooltip>
       </div>
         <div v-if="removedVertexCount > 0" class="text-green-700 font-semibold">
           {{ removedVertexCount }} Punkt{{ removedVertexCount === 1 ? '' : 'e' }} entfernt!
@@ -382,6 +400,9 @@
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
           <span class="font-bold mb-2 text-lg">Flächenliste</span>
+          <HelpTooltip>
+            Übersicht aller geladenen Flächen mit Namen, Größe und DIPUL-Prüfungsergebnissen. Klicken Sie auf eine Fläche, um dorthin zu zoomen.
+          </HelpTooltip>
         </button>
       </div>
       <div v-show="fieldListUI">
@@ -486,6 +507,7 @@ import {dipulLayerGroups, dipulLayerUI, dipulOpacity, toggleLayer} from "../comp
 import {geoBWLayerGroups, geobwOpacity, toggleGeoBWLayer} from "../composables/geoBWLayer.ts";
 import GRBCV_Check from "./sidebar/GRBCV_Check.vue";
 import DipulProgressBar from "./DipulProgressBar.vue";
+import HelpTooltip from "./HelpTooltip.vue";
 
 
 onMounted(() => {

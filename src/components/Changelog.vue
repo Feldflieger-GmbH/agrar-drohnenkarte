@@ -28,6 +28,17 @@
 <script setup lang="ts">
 const versions = [
   {
+    version: "0.3.0",
+    date: "2025-01-27",
+    added: [
+      "Hilfe-Tooltips für Hauptbereiche in der rechten Seitenleiste",
+      "Interaktive \"i\"-Icons mit kontextueller Hilfe bei Hover/Tap",
+      "Verbesserte Benutzerführung für alle Hauptfunktionen",
+      "Bessere Zugänglichkeit durch erklärende Tooltips"
+    ],
+    fixed: [ ]
+  },
+  {
     version: "0.2.0",
     date: "2025-08-05",
     added: [
