@@ -67,7 +67,7 @@
         </div>
       </div>
       <div v-else-if="dipulCheckActive" class="text-gray-400 italic">
-        (Keine Überschneidungen gefunden)
+        Keine Überschneidungen gefunden.
       </div>
   </SidebarSection>
 </template>

@@ -68,7 +68,7 @@
         </ul>
       </div>
       <div v-else class="text-gray-400 italic">
-        (Keine Flächen geladen)
+        Keine Flächen geladen.
       </div>
   </SidebarSection>
 </template>
