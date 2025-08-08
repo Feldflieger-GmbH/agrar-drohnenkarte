@@ -1,22 +1,8 @@
 <template>
-  <div>
-    <div class="space-y-2">
-      <button
-          class="flex items-center w-full py-1 focus:outline-none select-none group"
-          type="button"
-          @click="baseMapUI = !baseMapUI"
-      >
-        <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', baseMapUI ? 'rotate-90' : '']"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M9 5l7 7-7 7" stroke-width="2"/>
-        </svg>
-        <span class="font-bold mb-2 text-lg">Basis-Karte</span>
-        <HelpTooltip>
-          Wählen Sie hier die Grundkarte aus (OpenStreetMap oder Satellit) und passen Sie die Transparenz der Kartenebenen an.
-        </HelpTooltip>
-      </button>
-    </div>
-    <div v-show="baseMapUI">
+  <SidebarSection 
+    title="Basis-Karte" 
+    help-text="Wählen Sie hier die Grundkarte aus (OpenStreetMap oder Satellit) und passen Sie die Transparenz der Kartenebenen an."
+  >
       <div class="mb-2">
         <label class="block font-semibold mb-2">Karte wählen:
           <select v-model="selectedBasemap" class="w-full p-1 border rounded" @change="changeBasemap">
@@ -143,8 +129,7 @@
           </li>
         </ul>
       </div>
-    </div>
-  </div>
+  </SidebarSection>
 </template>
 
 <script setup lang="ts">
@@ -152,8 +137,7 @@ import { ref } from 'vue'
 import { basemapList, baseOpacity, changeBasemap, selectedBasemap } from "../../composables/basemap.ts"
 import { dipulLayerGroups, dipulLayerUI, dipulOpacity, toggleLayer } from "../../composables/dipulLayers.ts"
 import { geoBWLayerGroups, geobwOpacity, toggleGeoBWLayer } from "../../composables/geoBWLayer.ts"
-import HelpTooltip from "../HelpTooltip.vue"
+import SidebarSection from "./SidebarSection.vue"
 
-const baseMapUI = ref(false)
 const geoBWLayerUI = ref(false)
 </script>

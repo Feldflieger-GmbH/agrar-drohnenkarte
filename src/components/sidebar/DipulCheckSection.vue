@@ -1,22 +1,9 @@
 <template>
-  <div>
-    <div class="space-y-2">
-      <button
-          class="flex items-center w-full py-1 focus:outline-none select-none group"
-          type="button"
-          @click="dipulCheckUI = !dipulCheckUI"
-      >
-        <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', dipulCheckUI ? 'rotate-90' : '']"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M9 5l7 7-7 7" stroke-width="2"/>
-        </svg>
-        <span class="font-bold mb-2 text-lg">Dipul-Check</span>
-        <HelpTooltip>
-          Prüfen Sie Ihre Flächen automatisch auf Überschneidungen mit DIPUL-Zonen. Aktivieren Sie den Check und passen Sie die Auflösung an.
-        </HelpTooltip>
-      </button>
-    </div>
-    <div v-show="dipulCheckUI">
+  <SidebarSection 
+    title="Dipul-Check" 
+    help-text="Prüfen Sie Ihre Flächen automatisch auf Überschneidungen mit DIPUL-Zonen. Aktivieren Sie den Check und passen Sie die Auflösung an."
+    :default-expanded="true"
+  >
       <div v-if="featureInfo.length" class="mb-4">
         <h3 class="font-bold mb-2">Objekte an dieser Stelle:</h3>
         <div v-for="f in featureInfo" :key="f.id" class="border rounded p-2">
@@ -82,16 +69,12 @@
       <div v-else-if="dipulCheckActive" class="text-gray-400 italic">
         (Keine Überschneidungen gefunden)
       </div>
-    </div>
-  </div>
+  </SidebarSection>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { getArea } from "ol/sphere"
 import { dipulCheckActive, dipulCheckRes, dipulCheckShowPoints, dipulZoneList, featureInfo, dipulCheckProgress } from "../../composables/dipulFeature.ts"
 import DipulProgressBar from "../DipulProgressBar.vue"
-import HelpTooltip from "../HelpTooltip.vue"
-
-const dipulCheckUI = ref(true)
+import SidebarSection from "./SidebarSection.vue"
 </script>

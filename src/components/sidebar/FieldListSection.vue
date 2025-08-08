@@ -1,22 +1,9 @@
 <template>
-  <div>
-    <div class="space-y-2">
-      <button
-          class="flex items-center w-full py-1 focus:outline-none select-none group"
-          type="button"
-          @click="fieldListUI = !fieldListUI"
-      >
-        <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', fieldListUI ? 'rotate-90' : '']"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M9 5l7 7-7 7" stroke-width="2"/>
-        </svg>
-        <span class="font-bold mb-2 text-lg">Flächenliste</span>
-        <HelpTooltip>
-          Übersicht aller geladenen Flächen mit Namen, Größe und DIPUL-Prüfungsergebnissen. Klicken Sie auf eine Fläche, um dorthin zu zoomen.
-        </HelpTooltip>
-      </button>
-    </div>
-    <div v-show="fieldListUI">
+  <SidebarSection 
+    title="Flächenliste" 
+    help-text="Übersicht aller geladenen Flächen mit Namen, Größe und DIPUL-Prüfungsergebnissen. Klicken Sie auf eine Fläche, um dorthin zu zoomen."
+    :default-expanded="true"
+  >
       <div v-if="FieldList.length" class="mb-4">
         <div class="font-bold mt-4">
           Flächenzahl:&nbsp;
@@ -83,21 +70,17 @@
       <div v-else class="text-gray-400 italic">
         (Keine Flächen geladen)
       </div>
-    </div>
-  </div>
+  </SidebarSection>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { getArea } from "ol/sphere"
 import type { Feature } from "ol"
 import type { Geometry, MultiPolygon } from "ol/geom"
 import type Polygon from "ol/geom/Polygon"
 import { FieldList, zoomToPolygon } from "../../composables/customerMaps.ts"
 import { dipulCheckActive, fieldsWithDipul } from "../../composables/dipulFeature.ts"
-import HelpTooltip from "../HelpTooltip.vue"
-
-const fieldListUI = ref(true)
+import SidebarSection from "./SidebarSection.vue"
 
 function getDipulForFeature(f: {
   feature: Feature<Geometry>

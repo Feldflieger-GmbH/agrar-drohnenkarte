@@ -1,18 +1,13 @@
 <template>
   <aside aria-label="Customer-Data"
-         class="w-full md:w-96 bg-gray-50 p-4 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)] overflow-visible">
+         class="w-full md:w-96 bg-gray-50 border-l border-gray-300 flex flex-col max-h-[calc(100vh-68px)] overflow-visible">
     <div class="flex-1 overflow-y-auto overflow-x-visible">
       <BasemapSection />
-      <hr class="my-2" />
       <UserMapsSection />
       <GRBCV_Check />
-      <hr class="my-2" />
       <DipulCheckSection />
-      <hr class="my-2" />
       <OptimizationSection />
-      <hr class="my-2" />
       <ExportSection />
-      <hr class="my-2" />
       <FieldListSection />
     </div>
   </aside>

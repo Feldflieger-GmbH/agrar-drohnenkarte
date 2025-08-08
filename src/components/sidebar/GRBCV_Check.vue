@@ -1,24 +1,8 @@
 <template>
-  <div>
-    <hr class="my-2" />
-    <!-- GRBCV Check -->
-    <div class="space-y-2">
-      <button
-        class="flex items-center w-full py-1 focus:outline-none select-none group"
-        type="button"
-        @click="grbcvUI = !grbcvUI"
-      >
-        <svg :class="['w-4 h-4 mr-1 mb-1 transition-transform', grbcvUI ? 'rotate-90' : '']"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M9 5l7 7-7 7" stroke-width="2"/>
-        </svg>
-        <span class="font-bold mb-2 text-lg">Betriebsvolumen (GRB, CV)</span>
-        <HelpTooltip>
-          Berechnen des "Ground Risk Buffers" und "Contingency-Volumes"
-        </HelpTooltip>
-      </button>
-    </div>
-    <div v-show="grbcvUI">
+  <SidebarSection 
+    title="Betriebsvolumen (GRB, CV)" 
+    help-text="Berechnen des Ground Risk Buffers und Contingency-Volumes nach LBA-Richtlinien."
+  >
 
       <div class="mb-3 flex gap-2">
         <button @click="calculateAndShowBuffers()"
@@ -92,8 +76,7 @@
 
         <div class="font-bold mb-2">⚠️ Verwendung auf eigene Gefahr!</div>
       </div>
-    </div>
-  </div>
+  </SidebarSection>
 </template>
 
 <script setup lang="ts">
@@ -106,9 +89,8 @@ import {
   getCalculatedValues,
   deleteAllBuffers
 } from '../../composables/contingencyVolume';
+import SidebarSection from "./SidebarSection.vue";
 import HelpTooltip from "../HelpTooltip.vue";
-
-const grbcvUI = ref(false);
 const v0 = ref(12); // Default value 25 km/h (approximately 7 m/s)
 const cd = ref(3.15); // Default characteristic dimension
 const flightHeight = ref(10); // Default flight height in meters
