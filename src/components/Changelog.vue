@@ -32,10 +32,11 @@ const versions = [
     date: "2025-08-08",
     added: [
       "Hilfe-Tooltips für Hauptbereiche in der rechten Seitenleiste",
-      "Interaktive \"i\"-Icons mit kontextueller Hilfe bei Hover/Tap",
       "Re-Design der Seitenleiste",
       "Export und Optimierung getrennt",
-      "'Optimierung' in 'Bearbeiten' umbenannt"
+      "'Optimierung' in 'Bearbeiten' umbenannt",
+      "Bei Dipul-Checks wird der Fortschritt nun anhand der zu prüfenden Punkte angezeigt, nicht nach Felder"
+       , "Temporäre Betriebsbeschränkungen in den Dipul-Layer standardmäßig deaktiviert, da der MapService ein Fehler verursacht."
     ],
     fixed: [ ]
   },

@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Separated Export & Optimisation
 - Redesign Sidebar
 - Introduced Template to remove repeating code
+- Show progress for dipul-check based on points to check
 
 ## [0.2.0] - 2025-08-05
 

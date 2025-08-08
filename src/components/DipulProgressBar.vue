@@ -4,7 +4,7 @@
       <div class="progress-bar" :style="{ width: `${progress}%` }"></div>
     </div>
     <div class="progress-text">
-      {{ completedCount }} / {{ totalCount }} Felder geprüft
+      {{ completedCount }} / {{ totalCount }} Punkte geprüft
     </div>
   </div>
 </template>
