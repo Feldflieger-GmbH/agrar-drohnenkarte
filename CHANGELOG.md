@@ -10,7 +10,9 @@ All notable changes to this project will be documented in this file.
 - Interactive "i" icons that show contextual help on hover/tap
 - Improved user guidance for all main features
 - Better accessibility with explanatory tooltips
-
+- Separated Export & Optimisation
+- Redesign Sidebar
+- Introduced Template to remove repeating code
 
 ## [0.2.0] - 2025-08-05
 

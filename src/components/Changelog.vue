@@ -29,12 +29,13 @@
 const versions = [
   {
     version: "0.3.0",
-    date: "2025-01-27",
+    date: "2025-08-08",
     added: [
       "Hilfe-Tooltips für Hauptbereiche in der rechten Seitenleiste",
       "Interaktive \"i\"-Icons mit kontextueller Hilfe bei Hover/Tap",
-      "Verbesserte Benutzerführung für alle Hauptfunktionen",
-      "Bessere Zugänglichkeit durch erklärende Tooltips"
+      "Re-Design der Seitenleiste",
+      "Export und Optimierung getrennt",
+      "'Optimierung' in 'Bearbeiten' umbenannt"
     ],
     fixed: [ ]
   },
