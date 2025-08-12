@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'https://localhost:8443',
+  BASE_URL: 'https://ag.bury.link',
   ENDPOINTS: {
     PROTECTED: '/api/protected',
     GENERATE_SHAPEFILE: '/api/generate-shapefile',
