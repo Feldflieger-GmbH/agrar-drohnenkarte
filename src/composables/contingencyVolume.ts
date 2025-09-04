@@ -144,7 +144,7 @@ export const calculateGRBCV = () => {
   const sCV = sGPS + sPOS + sK + sRZ + sCM;
   
   // Store calculated value
-  calculatedValues.scv = sCV;
+    calculatedValues.scv = sCV;
   
   // Calculate Ground Risk Buffer distance
   const grbDistance = calculateGRB();

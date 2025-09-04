@@ -47,6 +47,7 @@ import {agMap, basemapSetup} from "./composables/basemap.js";
 import RightSidebar from "./components/RightSidebar.vue";
 import {registerContextMenuHandler, registerVertexMoveHandler} from "./composables/fieldOptimisatzion.js";
 import {getFeatureInfo} from "./composables/dipulFeature.js";
+import {auth} from "./composables/authentication";
 
 
 
@@ -59,8 +60,12 @@ const mapContainer = ref(null)
 
 
 
-onMounted(() => {
+onMounted(async () => {
   console.log("main mounting")
+  
+  // Initialize authentication first
+  await auth.initialize();
+  
   basemapSetup()
 
   agMap.setTarget(mapContainer.value)

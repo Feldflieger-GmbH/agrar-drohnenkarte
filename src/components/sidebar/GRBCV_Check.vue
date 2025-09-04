@@ -15,6 +15,14 @@
         </button>
       </div>
 
+      <div class="mb-3">
+        <button @click="generateKML()"
+                :disabled="isGenerating"
+                class="px-3 py-1 rounded bg-green-600 text-white font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed w-full">
+          {{ isGenerating ? 'Generiere KML...' : 'KML + Dipul-Dateien generieren' }}
+        </button>
+      </div>
+
       
       <div class="mb-3 flex items-center gap-2">
         <label for="v0Value" class="font-semibold">v0 (km/h):</label>
@@ -89,11 +97,17 @@ import {
   getCalculatedValues,
   deleteAllBuffers
 } from '../../composables/contingencyVolume';
+import {FieldLayerList, FieldLayerListRef} from '../../composables/customerMaps';
+import { getApiUrl } from '../../config/api';
 import SidebarSection from "./SidebarSection.vue";
 import HelpTooltip from "../HelpTooltip.vue";
+import GeoJSON from "ol/format/GeoJSON";
+import type {Feature} from "ol";
+import {fieldPrefix} from "../../composables/shpDownloader.ts";
 const v0 = ref(12); // Default value 25 km/h (approximately 7 m/s)
 const cd = ref(3.15); // Default characteristic dimension
 const flightHeight = ref(10); // Default flight height in meters
+const isGenerating = ref(false);
 
 // Object to store calculated values
 const calculatedValues = ref({
@@ -132,5 +146,102 @@ function calculateAndShowBuffers() {
     hfg: values.hfg
   };
 
+}
+
+async function generateKML() {
+  if (FieldLayerList.length === 0) {
+    alert('Keine Felder vorhanden. Bitte laden Sie zuerst Felddaten hoch.');
+    return;
+  }
+
+  isGenerating.value = true;
+
+  // Get current field data
+  const fieldsData: Array<{
+    name: string;
+    geometry: any;
+  }> = [];
+
+  try {
+    // Convert field features to GeoJSON format expected by the API
+    FieldLayerListRef.value.forEach(layerItem => {
+      layerItem.featureList.forEach(featureItem => {
+        const fieldName = getFeatureName(featureItem.feature);
+
+        // Convert OpenLayers geometry to GeoJSON
+        const geoJsonFormat = new GeoJSON();
+        const fieldGeometry = JSON.parse(geoJsonFormat.writeGeometry(featureItem.geometry, {
+          featureProjection: 'EPSG:3857',
+          dataProjection: 'EPSG:4326'
+        }));
+
+        fieldsData.push({
+          name: fieldName,
+          geometry: fieldGeometry
+        });
+      });
+    });
+
+    if (fieldsData.length === 0) {
+      alert('Keine gültigen Felder gefunden.');
+      return;
+    }
+
+    function getFeatureName(feature: Feature): string {
+      const props = feature.getProperties();
+      return (
+          props.name ||
+          props.NAME ||
+          props.Name ||
+          props.FLUR ||
+          props.BEZEICHNUNG ||
+          'Unnamed Field'
+      ).toString();
+    }
+
+
+    // Prepare request payload
+    const timestamp = new Date().toISOString().split('T')[0];
+    const payload = {
+      fields: fieldsData,
+      prefix: fieldPrefix.value || 'felder',
+      timestamp: new Date().toISOString(),
+      v0: v0.value,
+      characteristicDimension: cd.value,
+      flightHeight: flightHeight.value
+    };
+
+
+    // Make API request
+    const response = await fetch(getApiUrl('GENERATE_KML'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Fehler bei der KML-Generierung');
+    }
+
+    // Download the ZIP file
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `agrarkarte_grb_cv_buffers_${timestamp}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error('KML generation error:', error);
+    alert(`Fehler bei der KML-Generierung: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+  } finally {
+    isGenerating.value = false;
+  }
 }
 </script>
