@@ -4,7 +4,8 @@ export const API_CONFIG = {
   ENDPOINTS: {
     PROTECTED: '/api/protected',
     GENERATE_SHAPEFILE: '/api/generate-shapefile',
-    GENERATE_KML: '/api/generate-kml'
+    GENERATE_KML: '/api/generate-kml',
+    MISSION_PACKAGE: '/api/mission-package'
   }
 } as const;
 

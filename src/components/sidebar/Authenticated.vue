@@ -38,6 +38,17 @@
           >
             KML mit GRB/CV vom BE herunterladen
           </button>
+          
+          <button
+            @click="downloadMissionFiles"
+            :disabled="!canDownloadMissionFiles"
+            class="w-full px-3 py-1 rounded font-semibold transition"
+            :class="canDownloadMissionFiles 
+              ? 'bg-orange-600 text-white hover:bg-orange-700' 
+              : 'bg-gray-400 text-gray-600 cursor-not-allowed'"
+          >
+            Download Mission-Package
+          </button>
         </div>
 
         <button
@@ -86,9 +97,24 @@ import type { Feature } from "ol";
 import { fieldPrefix } from "../../composables/shpDownloader.ts";
 import GeoJSON from "ol/format/GeoJSON";
 import { auth } from "../../composables/authentication";
+import { computed } from "vue";
+import { calculatedValues } from "../../composables/contingencyVolume.ts";
+import { dipulCheckActive, fieldsWithDipul, dipulCheckProgress } from "../../composables/dipulFeature.ts";
 
 import { Log } from 'oidc-client-ts'
 Log.setLevel(Log.DEBUG)
+
+// Check if mission files button should be enabled
+const canDownloadMissionFiles = computed(() => {
+  // Check if GRB/CV has been calculated
+  const hasGrbCvCalculated = calculatedValues.value.scv > 0 && calculatedValues.value.sgrb > 0;
+  
+  // Check if DIPUL check is done (either disabled or completed with results)
+  const isDipulCheckDone = !dipulCheckActive.value || 
+    (!dipulCheckProgress.value.inProgress && Object.keys(fieldsWithDipul.value).length >= 0);
+  
+  return hasGrbCvCalculated && isDipulCheckDone && FieldLayerListRef.value.length > 0;
+});
 
 
 /*
@@ -248,6 +274,154 @@ async function downloadKMLFromBackend() {
       targetButton.textContent = originalText;
     }
   }
+}
+
+async function downloadMissionFiles() {
+  // Show loading state - find the mission files button
+  const buttons = document.querySelectorAll('button');
+  let targetButton: HTMLButtonElement | null = null;
+  let originalText = '';
+
+  for (const btn of buttons) {
+    if (btn.textContent?.includes('Download Mission-Package')) {
+      targetButton = btn as HTMLButtonElement;
+      originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Herunterladen...';
+      break;
+    }
+  }
+
+  try {
+    // Prepare complete field data including geometries and calculated values
+    const fieldData = prepareCompleteFieldData();
+
+    // Get access token for authentication
+    const accessToken = await auth.getAccessToken();
+
+    const response = await makeAuthenticatedRequest(getApiUrl('MISSION_PACKAGE'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/zip, application/octet-stream'
+      },
+      body: JSON.stringify(fieldData)
+    }, accessToken || undefined);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Get filename from response headers or use default
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'mission-files.zip';
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    // Convert response to blob and download
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    console.log('Mission files downloaded successfully from backend');
+  } catch (error) {
+    console.error('Failed to download mission files from backend:', error);
+    alert('Fehler beim Herunterladen der Mission-Dateien vom Server. Bitte versuchen Sie es erneut.');
+  } finally {
+    // Restore button state
+    if (targetButton && originalText) {
+      targetButton.disabled = false;
+      targetButton.textContent = originalText;
+    }
+  }
+}
+
+function prepareCompleteFieldData() {
+  // Get current field data
+  const fieldsData: Array<{
+    name: string;
+    geometry: any;
+    dipulZones?: any[];
+    contingencyVolume?: any;
+    groundRiskBuffer?: any;
+  }> = [];
+
+  if (FieldLayerListRef.value) {
+    FieldLayerListRef.value.forEach((layerItem, layerIndex) => {
+      layerItem.featureList.forEach((featureItem, fieldIndex) => {
+        const fieldName = getFeatureName(featureItem.feature);
+        const fieldKey = featureItem.feature.getId() || JSON.stringify(featureItem.geometry.getCoordinates()[0][0]);
+
+        // Convert OpenLayers geometry to GeoJSON
+        const geoJsonFormat = new GeoJSON();
+        const fieldGeometry = JSON.parse(geoJsonFormat.writeGeometry(featureItem.geometry, {
+          featureProjection: 'EPSG:3857',
+          dataProjection: 'EPSG:4326'
+        }));
+
+        // Get DIPUL zones for this field
+        let dipulZones = undefined;
+        if (fieldsWithDipul.value[fieldKey]) {
+          dipulZones = fieldsWithDipul.value[fieldKey];
+        }
+
+        // Get contingency volume and ground risk buffer if available
+        let contingencyVolume = undefined;
+        let groundRiskBuffer = undefined;
+        
+        if (featureItem.contingency_volume) {
+          contingencyVolume = JSON.parse(geoJsonFormat.writeGeometry(featureItem.contingency_volume, {
+            featureProjection: 'EPSG:3857',
+            dataProjection: 'EPSG:4326'
+          }));
+        }
+        
+        if (featureItem.ground_risk_buffer) {
+          groundRiskBuffer = JSON.parse(geoJsonFormat.writeGeometry(featureItem.ground_risk_buffer, {
+            featureProjection: 'EPSG:3857',
+            dataProjection: 'EPSG:4326'
+          }));
+        }
+
+        fieldsData.push({
+          name: fieldName,
+          geometry: fieldGeometry,
+          dipulZones: dipulZones,
+          contingencyVolume: contingencyVolume,
+          groundRiskBuffer: groundRiskBuffer
+        });
+      });
+    });
+  }
+
+  // Get calculated GRB/CV values
+  const currentCalculatedValues = calculatedValues.value;
+
+  const fieldData = {
+    fields: fieldsData,
+    prefix: fieldPrefix.value || 'felder',
+    timestamp: new Date().toISOString(),
+    calculatedValues: currentCalculatedValues,
+    dipulCheckActive: dipulCheckActive.value,
+    metadata: {
+      totalFields: fieldsData.length,
+      hasGrbCvCalculated: currentCalculatedValues.scv > 0 && currentCalculatedValues.sgrb > 0,
+      dipulCheckCompleted: !dipulCheckProgress.value.inProgress
+    }
+  };
+
+  console.log('Prepared complete field data for mission files:', fieldData);
+  return fieldData;
 }
 
 
