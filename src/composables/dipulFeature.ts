@@ -65,8 +65,8 @@ export const dipulZoneList = computed(() => {
             }[]}} = {}
 
 
-    FieldLayerListRef.value.forEach(fieldLayer => {
-        fieldLayer.featureList.forEach(fld => {
+    FieldLayerListRef.value.forEach((fieldLayer, idx) => {
+        fieldLayer.featureList.forEach((fld, idx2) => {
             const fGeo  = fld.geometry
 
             const key = fld.feature.getId() || JSON.stringify(fGeo.getCoordinates()[0][0])
@@ -80,6 +80,8 @@ export const dipulZoneList = computed(() => {
                 return
             }
 
+            //FieldLayerListRef.value[idx].featureList[idx2].zone_overlap = dipulList
+            FieldLayerList[idx].featureList[idx2].zone_overlap = dipulList
 
             dipulList.forEach(zone => {
                 // Zonen-Namen/Feld als Key nehmen (z.B. zone.properties.type_code + zone.id)
@@ -105,6 +107,7 @@ export const dipulZoneList = computed(() => {
                     name: getFeatureName(fld.feature)
                 })
             })
+
         })
     })
     return mapping
