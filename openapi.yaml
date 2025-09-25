@@ -6,12 +6,9 @@ info:
     
     This server provides endpoints for:
     - Health monitoring
-    - User authentication via Authentik JWT
-    - Shapefile generation for agricultural fields
-    - KML generation with buffer zones for drone flight planning
   version: 1.0.0
   contact:
-    name: Agrarkarte Team
+    name: Feldflieger GmbH
   license:
     name: MIT
 
@@ -32,171 +29,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Response'
+                $ref: '#/components/schemas/HealthResponse'
               example:
                 success: true
                 message: "Server is healthy"
 
-  /api/public:
-    get:
-      summary: Public endpoint
-      description: Public endpoint accessible to everyone, shows authentication status
-      tags:
-        - Public
-      security: []
-      responses:
-        '200':
-          description: Public endpoint response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-
-  /api/protected:
-    get:
-      summary: Protected endpoint
-      description: Protected endpoint requiring JWT authentication
-      tags:
-        - Protected
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: Protected endpoint response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/user/profile:
-    get:
-      summary: Get user profile
-      description: Returns the authenticated user's profile information
-      tags:
-        - User
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: User profile information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-              example:
-                success: true
-                data:
-                  id: "user123"
-                  email: "user@example.com"
-                  name: "John Doe"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/generate-shapefile:
-    post:
-      summary: Generate shapefile
-      description: Generates a shapefile from agricultural field data (requires authentication)
-      tags:
-        - File Generation
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GenerateRequest'
-            example:
-              fields:
-                - name: "Test Field"
-                  geometry:
-                    type: "Polygon"
-                    coordinates: [[[0,0],[1,0],[1,1],[0,1],[0,0]]]
-              prefix: "test"
-              timestamp: "2024-01-01"
-      responses:
-        '200':
-          description: Shapefile generated successfully
-          content:
-            application/zip:
-              schema:
-                type: string
-                format: binary
-          headers:
-            Content-Disposition:
-              description: Attachment filename
-              schema:
-                type: string
-                example: 'attachment; filename="agrarkarte_test_shapefile.zip"'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/generate-kml:
-    post:
-      summary: Generate KML with buffer zones
-      description: |
-        Generates KML files with buffer zones for drone flight planning.
-        
-        **Public endpoint** - No authentication required.
-        
-        Creates three KML files:
-        - Original field polygons
-        - Contingency volume (inner buffer)
-        - Ground risk buffer (outer buffer)
-        
-        Buffer calculations are based on:
-        - V0: Drone velocity in km/h
-        - Characteristic Dimension: Physical size in meters
-        - Flight Height: Operating altitude in meters
-      tags:
-        - File Generation
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/KMLRequest'
-            example:
-              fields:
-                - name: "Test Field"
-                  geometry:
-                    type: "Polygon"
-                    coordinates: [[[0,0],[1,0],[1,1],[0,1],[0,0]]]
-              prefix: "test"
-              timestamp: "2024-01-01"
-              v0: 50
-              characteristicDimension: 25
-              flightHeight: 120
-      responses:
-        '200':
-          description: KML files generated successfully
-          content:
-            application/zip:
-              schema:
-                type: string
-                format: binary
-              example: |
-                ZIP archive containing:
-                - test_original_fields.kml
-                - test_contingency_volume.kml  
-                - test_ground_risk_buffer.kml
-          headers:
-            Content-Disposition:
-              description: Attachment filename
-              schema:
-                type: string
-                example: 'attachment; filename="agrarkarte_test_kml.zip"'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
   /api/mission-package:
     post:
@@ -290,7 +127,7 @@ components:
       description: JWT token from Authentik authentication server
 
   schemas:
-    Response:
+    HealthResponse:
       type: object
       properties:
         success:
@@ -318,30 +155,13 @@ components:
         - error
         - message
 
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique user identifier
-        email:
-          type: string
-          format: email
-          description: User's email address
-        name:
-          type: string
-          description: User's display name
-      required:
-        - id
-        - email
-        - name
 
     Geometry:
       type: object
       properties:
         type:
           type: string
-          enum: [Polygon]
+          enum: [ Polygon ]
           description: GeoJSON geometry type
         coordinates:
           type: array
@@ -356,86 +176,7 @@ components:
         - type
         - coordinates
 
-    Field:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the agricultural field
-          maxLength: 254
-        geometry:
-          $ref: '#/components/schemas/Geometry'
-      required:
-        - name
-        - geometry
 
-    GenerateRequest:
-      type: object
-      properties:
-        fields:
-          type: array
-          description: Array of agricultural fields
-          items:
-            $ref: '#/components/schemas/Field'
-          minItems: 1
-        prefix:
-          type: string
-          description: Prefix for generated filenames
-          example: "farm_2024"
-        timestamp:
-          type: string
-          description: Timestamp for the generation request
-          example: "2024-01-01"
-      required:
-        - fields
-        - prefix
-        - timestamp
-
-    KMLRequest:
-      type: object
-      properties:
-        fields:
-          type: array
-          description: Array of agricultural fields
-          items:
-            $ref: '#/components/schemas/Field'
-          minItems: 1
-        prefix:
-          type: string
-          description: Prefix for generated filenames
-          example: "drone_mission"
-        timestamp:
-          type: string
-          description: Timestamp for the generation request
-          example: "2024-01-01"
-        v0:
-          type: number
-          format: float
-          description: Drone velocity in km/h
-          minimum: 0.1
-          maximum: 200
-          example: 50
-        characteristicDimension:
-          type: number
-          format: float
-          description: Characteristic dimension of the drone in meters
-          minimum: 0.1
-          maximum: 100
-          example: 25
-        flightHeight:
-          type: number
-          format: float
-          description: Flight height in meters
-          minimum: 1
-          maximum: 500
-          example: 120
-      required:
-        - fields
-        - prefix
-        - timestamp
-        - v0
-        - characteristicDimension
-        - flightHeight
 
     MissionPackageRequest:
       type: object
@@ -485,15 +226,12 @@ components:
           description: DIPUL restriction zones intersecting this field
           items:
             $ref: '#/components/schemas/DipulZone'
-        contingencyVolume:
-          $ref: '#/components/schemas/Geometry'
-          description: Calculated contingency volume geometry
         groundRiskBuffer:
           $ref: '#/components/schemas/Geometry'
-          description: Calculated ground risk buffer geometry
-      required:
-        - name
-        - geometry
+        contingencyVolume:
+          $ref: '#/components/schemas/Geometry'
+
+
 
     DipulZone:
       type: object
@@ -641,15 +379,3 @@ components:
 tags:
   - name: Health
     description: Server health monitoring
-  - name: Public
-    description: Public endpoints accessible without authentication
-  - name: Protected
-    description: Protected endpoints requiring authentication
-  - name: User
-    description: User management and profile operations
-  - name: File Generation
-    description: File generation services for agricultural data
-
-externalDocs:
-  description: Project README
-  url: https://github.com/your-org/agrarkarte-server

@@ -2,22 +2,19 @@
 export const API_CONFIG = {
   BASE_URL: 'https://ag.bury.local',
   ENDPOINTS: {
-    PROTECTED: '/api/protected',
-    GENERATE_SHAPEFILE: '/api/generate-shapefile',
-    GENERATE_KML: '/api/generate-kml',
-    MISSION_PACKAGE: '/api/mission-package'
+    MISSION_PACKAGE: '/api/v1/mission-package'
   }
 } as const;
 
 // Authentik Configuration
 export const AUTHENTIK_CONFIG = {
   // Using path-based routing through NPM - all under same domain
-  AUTHORITY: 'https://ag.bury.local/auth/application/o/agrar-drohnenkarte/',
+  AUTHORITY: `${API_CONFIG.BASE_URL}/auth/application/o/agrar-drohnenkarte/`,
   CLIENT_ID: 'VdMCo11sWPUpjGOoC3UgNyS83skFvvYimrdcTEj5',
   // All callbacks redirect to the same domain root
-  get REDIRECT_URI() { return 'https://ag.bury.local/' },
-  get POST_LOGOUT_REDIRECT_URI() { return 'https://ag.bury.local/' },
-  get SILENT_REDIRECT_URI() { return 'https://ag.bury.local/' }
+  get REDIRECT_URI() { return `${API_CONFIG.BASE_URL}/` },
+  get POST_LOGOUT_REDIRECT_URI() { return `${API_CONFIG.BASE_URL}/` },
+  get SILENT_REDIRECT_URI() { return `${API_CONFIG.BASE_URL}/` }
 } as const;
 
 // Helper function to build full API URLs
