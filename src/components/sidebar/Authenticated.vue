@@ -30,20 +30,31 @@
         <div class="text-green-600 font-semibold">
           ✓ Angemeldet als {{ auth.userProfile.value?.name || auth.userProfile.value?.email || 'Benutzer' }}
         </div>
-        
-        <div class="space-y-1">
-          
-          <button
-            @click="downloadMissionFiles"
-            :disabled="!canDownloadMissionFiles"
-            class="w-full px-3 py-1 rounded font-semibold transition"
-            :class="canDownloadMissionFiles 
-              ? 'bg-orange-600 text-white hover:bg-orange-700' 
-              : 'bg-gray-400 text-gray-600 cursor-not-allowed'"
-          >
-            Download Mission-Package
-          </button>
-        </div>
+
+        <!-- Mission Files features - only show if user has the required group -->
+        <template v-if="auth.hasMissionFilesAccess.value">
+          <div class="space-y-1">
+            <a href="/mgmt/mission-files"
+              @click="downloadMissionFiles"
+              class="w-full px-3 py-1 rounded font-semibold transition bg-orange-600 text-white hover:bg-orange-700"
+            >
+              Missions-Daten verwalten
+            </a>
+          </div>
+
+          <div class="space-y-1">
+            <button
+              @click="downloadMissionFiles"
+              :disabled="!canDownloadMissionFiles"
+              class="w-full px-3 py-1 rounded font-semibold transition"
+              :class="canDownloadMissionFiles
+                ? 'bg-orange-600 text-white hover:bg-orange-700'
+                : 'bg-gray-400 text-gray-600 cursor-not-allowed'"
+            >
+              Download Mission-Paket
+            </button>
+          </div>
+        </template>
 
         <button
           @click="auth.signoutRedirect"

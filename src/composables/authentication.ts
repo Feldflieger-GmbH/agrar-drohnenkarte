@@ -12,6 +12,22 @@ const isAuthenticated = computed(() => !!user.value && !user.value.expired)
 const accessToken = computed(() => user.value?.access_token)
 const userProfile = computed(() => user.value?.profile)
 
+// Check if user has a specific group membership
+const hasGroup = (groupName: string): boolean => {
+  if (!user.value || !user.value.profile) {
+    return false
+  }
+
+  // Check for groups in different possible claim formats
+  const profile = user.value.profile as any
+  const groups = profile.groups || profile['groups'] || []
+
+  return Array.isArray(groups) && groups.includes(groupName)
+}
+
+// Check if user has mission files feature access
+const hasMissionFilesAccess = computed(() => hasGroup('agmap.feature.missionfiles'))
+
 // Authentik OIDC configuration
 const oidcSettings: UserManagerSettings = {
   authority: AUTHENTIK_CONFIG.AUTHORITY,
@@ -208,7 +224,8 @@ export const useAuthentication = () => {
     error,
     accessToken,
     userProfile,
-    
+    hasMissionFilesAccess,
+
     // Actions
     initialize,
     signinRedirect,
@@ -217,7 +234,8 @@ export const useAuthentication = () => {
     signinSilent,
     getAccessToken,
     clearError,
-    
+    hasGroup,
+
     // UserManager instance for advanced use cases
     userManager
   }
