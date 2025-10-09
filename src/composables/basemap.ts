@@ -3,21 +3,24 @@
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
 import XYZ from "ol/source/XYZ";
+import Google from "ol/source/Google";
 import {ref, watch} from "vue";
 import Map from 'ol/Map.js';
 import {Attribution} from "ol/control";
 import View from "ol/View";
 import {dipulWmsLayer} from "./dipulLayers.ts";
+import { GOOGLE_MAPS_CONFIG } from "../config/api.ts";
 
 interface basemaps {
     name: string
     label: string
-    layer: () => TileLayer<OSM>
+    layer: () => TileLayer<OSM> | TileLayer<XYZ> | TileLayer<Google>
+    requiresGroup?: string  // Optional: group requirement for access
 }
 
 
 export let agMap: Map;
-export let currentBaseLayer: TileLayer<OSM> | null = null;
+export let currentBaseLayer: TileLayer<OSM> | TileLayer<XYZ> | TileLayer<Google> | null = null;
 export const baseOpacity = ref(1) // 0 = ganz durchsichtig
 export const selectedBasemap = ref("osm")
 export const basemapList: basemaps[] = [
@@ -37,6 +40,67 @@ export const basemapList: basemaps[] = [
                 attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>. Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
             })
         })
+    },
+    {
+        name: "google-roadmap",
+        label: "Google Maps (Straßenkarte)",
+        requiresGroup: "agmap.feature.gmaps",
+        layer: () => new TileLayer({
+            source: new Google({
+                key: GOOGLE_MAPS_CONFIG.API_KEY,
+                mapType: 'roadmap',
+                language: 'de-DE',
+                region: 'DE',
+                scale: 'scaleFactor2x',
+                highDpi: true
+            })
+        })
+    },
+    {
+        name: "google-satellite",
+        label: "Google Maps (Satellit)",
+        requiresGroup: "agmap.feature.gmaps",
+        layer: () => new TileLayer({
+            source: new Google({
+                key: GOOGLE_MAPS_CONFIG.API_KEY,
+                mapType: 'satellite',
+                language: 'de-DE',
+                region: 'DE',
+                scale: 'scaleFactor2x',
+                highDpi: true
+            })
+        })
+    },
+    {
+        name: "google-hybrid",
+        label: "Google Maps (Hybrid)",
+        requiresGroup: "agmap.feature.gmaps",
+        layer: () => new TileLayer({
+            source: new Google({
+                key: GOOGLE_MAPS_CONFIG.API_KEY,
+                mapType: 'satellite',
+                layerTypes: ['layerRoadmap'],  // Adds road overlay on satellite
+                language: 'de-DE',
+                region: 'DE',
+                scale: 'scaleFactor2x',
+                highDpi: true
+            })
+        })
+    },
+    {
+        name: "google-terrain",
+        label: "Google Maps (Terrain)",
+        requiresGroup: "agmap.feature.gmaps",
+        layer: () => new TileLayer({
+            source: new Google({
+                key: GOOGLE_MAPS_CONFIG.API_KEY,
+                mapType: 'terrain',
+                language: 'de-DE',
+                region: 'DE',
+                scale: 'scaleFactor2x',
+                highDpi: true
+            })
+        })
     }
 ]
 
@@ -44,6 +108,10 @@ export const basemapList: basemaps[] = [
 export function basemapSetup() {
     const selected = basemapList.find(b => b.name === selectedBasemap.value)
     if (selected === undefined) return;
+
+    console.log(`GOOGLE_MAPS_CONFIG : '${GOOGLE_MAPS_CONFIG.API_KEY}'`)
+
+
 
     currentBaseLayer = selected.layer()
 

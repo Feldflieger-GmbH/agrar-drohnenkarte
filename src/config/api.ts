@@ -6,6 +6,26 @@ export const API_CONFIG = {
   }
 } as const;
 
+// Declare window.config type for TypeScript
+declare global {
+  interface Window {
+    config?: {
+      googleMaps?: {
+        apiKey?: string;
+        mapId?: string;
+      };
+    };
+  }
+}
+
+// Google Maps Configuration - reads from runtime config injected by entrypoint.sh
+export const GOOGLE_MAPS_CONFIG = {
+  // Get API key from runtime config or fallback to build-time env variable
+  API_KEY: (typeof window !== 'undefined' && window.config?.googleMaps?.apiKey) || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+  // Map ID is optional but recommended for advanced styling
+  MAP_ID: (typeof window !== 'undefined' && window.config?.googleMaps?.mapId) || import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || ''
+} as const;
+
 // Authentik Configuration
 export const AUTHENTIK_CONFIG = {
   // Using path-based routing through NPM - all under same domain

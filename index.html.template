@@ -20,6 +20,16 @@
 
     </script>
 
+    <!-- Runtime Configuration -->
+    <script>
+        window.config = {
+            googleMaps: {
+                apiKey: '${GOOGLE_MAPS_API_KEY}',
+                mapId: '${GOOGLE_MAPS_MAP_ID}'
+            }
+        };
+    </script>
+
 </head>
 <body>
 <div id="app"></div>

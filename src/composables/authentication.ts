@@ -1,6 +1,6 @@
-import { ref, computed } from 'vue'
-import { UserManager, User, type UserManagerSettings } from 'oidc-client-ts'
-import { AUTHENTIK_CONFIG } from '../config/api'
+import {computed, ref} from 'vue'
+import {User, UserManager, type UserManagerSettings} from 'oidc-client-ts'
+import {AUTHENTIK_CONFIG} from '../config/api'
 
 // Authentication state
 const user = ref<User | null>(null)
@@ -27,6 +27,9 @@ const hasGroup = (groupName: string): boolean => {
 
 // Check if user has mission files feature access
 const hasMissionFilesAccess = computed(() => hasGroup('agmap.feature.missionfiles'))
+
+// Check if user has Google Maps feature access
+const hasGoogleMapsAccess = computed(() => hasGroup('agmap.feature.gmaps'))
 
 // Authentik OIDC configuration
 const oidcSettings: UserManagerSettings = {
@@ -139,8 +142,7 @@ export const useAuthentication = () => {
   // Handle signin callback
   const handleSigninCallback = async () => {
     try {
-      const callbackUser = await userManager.signinRedirectCallback()
-      user.value = callbackUser
+        user.value = await userManager.signinRedirectCallback()
       // Clear URL parameters after successful authentication
       window.history.replaceState({}, document.title, window.location.pathname)
     } catch (err) {
@@ -155,8 +157,7 @@ export const useAuthentication = () => {
     try {
       await userManager.signinSilentCallback()
       // Refresh user state after silent callback
-      const refreshedUser = await userManager.getUser()
-      user.value = refreshedUser
+        user.value = await userManager.getUser()
       // Clear URL parameters after successful silent authentication
       window.history.replaceState({}, document.title, window.location.pathname)
     } catch (err) {
@@ -225,6 +226,7 @@ export const useAuthentication = () => {
     accessToken,
     userProfile,
     hasMissionFilesAccess,
+    hasGoogleMapsAccess,
 
     // Actions
     initialize,

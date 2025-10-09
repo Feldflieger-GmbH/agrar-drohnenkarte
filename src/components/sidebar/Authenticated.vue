@@ -256,8 +256,8 @@ function prepareCompleteFieldData() {
   }> = [];
 
   if (FieldLayerListRef.value) {
-    FieldLayerListRef.value.forEach((layerItem, layerIndex) => {
-      layerItem.featureList.forEach((featureItem, fieldIndex) => {
+    FieldLayerListRef.value.forEach((layerItem) => {
+      layerItem.featureList.forEach((featureItem) => {
         const fieldName = getFeatureName(featureItem.feature);
         const fieldKey = featureItem.feature.getId() || JSON.stringify(featureItem.geometry.getCoordinates()[0][0]);
 
