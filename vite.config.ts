@@ -7,6 +7,6 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [vue(),  tailwindcss()],
     server: {
-      allowedHosts: ["ag-fe.bury.local","agmap.bury.local","ag.bury.link", "ag.bury.local"]
+      allowedHosts: ["ag-fe.bury.local","agmap.bury.local","ag.bury.link", "ag.bury.local", "agrarkarte.feldflieger.eu"]
     }
 })

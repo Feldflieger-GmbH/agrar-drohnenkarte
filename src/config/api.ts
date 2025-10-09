@@ -1,6 +1,6 @@
-// API Configuration
+// API Configuration - reads from runtime config injected by entrypoint.sh
 export const API_CONFIG = {
-  BASE_URL: 'https://ag.bury.local',
+  BASE_URL: (typeof window !== 'undefined' && window.config?.baseUrl) || 'https://ag.bury.local',
   ENDPOINTS: {
     MISSION_PACKAGE: '/api/v1/mission-package'
   }
@@ -10,6 +10,7 @@ export const API_CONFIG = {
 declare global {
   interface Window {
     config?: {
+      baseUrl?: string;
       googleMaps?: {
         apiKey?: string;
         mapId?: string;
