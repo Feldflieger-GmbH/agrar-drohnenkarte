@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-08-05
+
+### Added
+- KML export functionality for fields with Ground Risk Buffer (GRB) and Contingency Volume (CV) data
+- Styled KML output with color-coded polygons matching the application's visual scheme:
+  - Field polygons: Blue outline with light blue fill
+  - Contingency Volume (CV): Orange outline with semi-transparent fill  
+  - Ground Risk Buffer (GRB): Red outline with semi-transparent fill
+- Smart label positioning system to prevent text overlap:
+  - Field labels: Gold color, largest scale (1.1x)
+  - CV labels: Orange color, medium scale (0.9x) with spatial offset
+  - GRB labels: Red color, smallest scale (0.8x) with opposite spatial offset
+- Unified prefix system - both shapefile and KML exports now use the same field name prefix
+- Professional KML structure with proper metadata and descriptions
+- Validation to ensure GRB/CV calculations exist before export
+- Enhanced download button: "Als KML mit GRB/CV herunterladen" in the export section
+
+### Changed
+- Shapefile download button text updated to "Als ShapeFile für DJI herunterladen" for clarity
+
+### Technical
+- Created new `kmlDownloader.ts` composable for KML export functionality
+- Implemented proper coordinate transformation from EPSG:3857 to EPSG:4326
+- Added separate point-based label features with invisible icons
+- Enhanced regex-based styling system for KML post-processing
 
 ## [0.3.0] - 2025-01-27
 

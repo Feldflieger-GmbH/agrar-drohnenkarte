@@ -12,16 +12,23 @@
           placeholder="z. B. Muster-"
       />
     </div>
-    <button
-        @click="downloadAsShapefile"
-        class="px-3 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-    >
-      Als ShapeFile herunterladen
-    </button>
+    
+    <div class="space-y-2">
+      <button
+          @click="downloadAsShapefile"
+          class="w-full px-3 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+      >
+        Als ShapeFile herunterladen
+      </button>
+
+    </div>
   </SidebarSection>
 </template>
 
 <script setup lang="ts">
+
 import { downloadAsShapefile, fieldPrefix } from "../../composables/shpDownloader.ts"
 import SidebarSection from "./SidebarSection.vue"
+
+
 </script>

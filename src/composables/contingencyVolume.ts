@@ -45,17 +45,19 @@ const contingencyVolumeStyle = new Style({
     color: 'rgba(255, 165, 0, 0.1)' // Light orange
   })
 });
+
+
 // Store calculated values
-const calculatedValues = {
+export const calculatedValues = ref({
   scv: 0,
   sgrb: 0,
   hcv: 0,
   hfg: 0
-};
+});
 
 // Function to get calculated values
 export const getCalculatedValues = () => {
-  return calculatedValues;
+  return calculatedValues.value;
 };
 
 // Track visibility state
@@ -104,7 +106,7 @@ export const calculateGRB = () => {
   const grb = calculateVerticalCV() + (0.5 * cd);
   
   // Store calculated value
-  calculatedValues.sgrb = grb;
+  calculatedValues.value.sgrb = grb;
   
   return grb;
 }
@@ -121,8 +123,8 @@ export const calculateVerticalCV = () => {
   const hCV = hFG + hBaro + hRZ + hCM;
   
   // Store calculated values
-  calculatedValues.hcv = hCV;
-  calculatedValues.hfg = hFG;
+  calculatedValues.value.hcv = hCV;
+  calculatedValues.value.hfg = hFG;
   
   return hCV;
 }
@@ -144,7 +146,7 @@ export const calculateGRBCV = () => {
   const sCV = sGPS + sPOS + sK + sRZ + sCM;
   
   // Store calculated value
-  calculatedValues.scv = sCV;
+    calculatedValues.value.scv = sCV;
   
   // Calculate Ground Risk Buffer distance
   const grbDistance = calculateGRB();

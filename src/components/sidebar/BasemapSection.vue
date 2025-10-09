@@ -6,7 +6,7 @@
       <div class="mb-2">
         <label class="block font-semibold mb-2">Karte wählen:
           <select v-model="selectedBasemap" class="w-full p-1 border rounded" @change="changeBasemap">
-            <option v-for="b in basemapList" :key="b.name" :value="b.name">{{ b.label }}</option>
+            <option v-for="b in availableBasemaps" :key="b.name" :value="b.name">{{ b.label }}</option>
           </select>
         </label>
       </div>
@@ -29,7 +29,7 @@
             @click="dipulLayerUI = !dipulLayerUI"
         >
           <svg :class="['w-4 h-4 mr-1 transition-transform', dipulLayerUI ? 'rotate-90' : '']"
-               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                stroke="currentColor" viewBox="0 0 24 24">
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
           <span class="font-semibold">DIPUL</span>
@@ -53,7 +53,7 @@
                 @click="group.expanded = !group.expanded"
             >
               <svg :class="['w-4 h-4 mr-1 transition-transform', group.expanded ? 'rotate-90' : '']"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M9 5l7 7-7 7" stroke-width="2"/>
               </svg>
               <span :class="['w-3 h-3 rounded-full mr-2', group.icon]"></span>
@@ -82,7 +82,7 @@
             @click="geoBWLayerUI = !geoBWLayerUI"
         >
           <svg :class="['w-4 h-4 mr-1 transition-transform', geoBWLayerUI ? 'rotate-90' : '']"
-               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                stroke="currentColor" viewBox="0 0 24 24">
             <path d="M9 5l7 7-7 7" stroke-width="2"/>
           </svg>
           <span class="font-semibold">GeoBW</span>
@@ -108,7 +108,7 @@
                 @click="group.expanded = !group.expanded"
             >
               <svg :class="['w-4 h-4 mr-1 transition-transform', group.expanded ? 'rotate-90' : '']"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M9 5l7 7-7 7" stroke-width="2"/>
               </svg>
               <span :class="['w-3 h-3 rounded-full mr-2', group.icon]"></span>
@@ -133,11 +133,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { basemapList, baseOpacity, changeBasemap, selectedBasemap } from "../../composables/basemap.ts"
 import { dipulLayerGroups, dipulLayerUI, dipulOpacity, toggleLayer } from "../../composables/dipulLayers.ts"
 import { geoBWLayerGroups, geobwOpacity, toggleGeoBWLayer } from "../../composables/geoBWLayer.ts"
 import SidebarSection from "./SidebarSection.vue"
+import { auth } from "../../composables/authentication"
 
 const geoBWLayerUI = ref(false)
+
+// Filter basemap list based on user group access
+const availableBasemaps = computed(() => {
+  return basemapList.filter(basemap => {
+    // If no group required, always show
+    if (!basemap.requiresGroup) {
+      return true
+    }
+
+    // Check if user has the required group
+    return auth.hasGroup(basemap.requiresGroup)
+  })
+})
 </script>

@@ -14,7 +14,6 @@
           Löschen
         </button>
       </div>
-
       
       <div class="mb-3 flex items-center gap-2">
         <label for="v0Value" class="font-semibold">v0 (km/h):</label>
@@ -133,4 +132,5 @@ function calculateAndShowBuffers() {
   };
 
 }
+
 </script>

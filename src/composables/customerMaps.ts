@@ -13,6 +13,7 @@ import Fill from "ol/style/Fill";
 import Stroke from "ol/style/Stroke";
 import type {FeatureLike} from "ol/Feature";
 import Polygon from "ol/geom/Polygon";
+import type {DipulFeature} from "./dipulFeature.ts";
 
 
 
@@ -33,6 +34,7 @@ export interface LayerListItem {
         geometry: Polygon | MultiPolygon
         ground_risk_buffer?: Polygon | MultiPolygon
         contingency_volume?: Polygon | MultiPolygon
+        zone_overlap?: DipulFeature[]
     }[]
 }
 export const FieldLayerListRef: Ref<LayerListItem[]> = ref([])

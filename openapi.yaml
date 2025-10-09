@@ -1,0 +1,381 @@
+openapi: 3.0.3
+info:
+  title: Agrarkarte Server API
+  description: |
+    REST API for agricultural data processing with authentication and file generation capabilities.
+    
+    This server provides endpoints for:
+    - Health monitoring
+  version: 1.0.0
+  contact:
+    name: Feldflieger GmbH
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8081
+    description: Development server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns the health status of the server
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                success: true
+                message: "Server is healthy"
+
+
+  /api/mission-package:
+    post:
+      summary: Generate mission package
+      description: |
+        Generates a complete mission package with all flight planning data.
+        
+        **Authenticated endpoint** - Requires JWT authentication.
+        
+        Includes:
+        - Original field polygons with calculated zones
+        - Contingency volumes and ground risk buffers
+        - DIPUL intersection data (if available)
+        - Flight parameters and calculated values
+        - Mission metadata
+        
+        Returns a ZIP package containing all necessary files for drone mission planning.
+      tags:
+        - File Generation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MissionPackageRequest'
+            example:
+              fields:
+                - name: "Test Field"
+                  geometry:
+                    type: "Polygon"
+                    coordinates: [[[0,0],[1,0],[1,1],[0,1],[0,0]]]
+                  dipulZones:
+                    - id: "zone123"
+                      properties:
+                        type_code: "restricted"
+                        name: "No-fly zone"
+                  contingencyVolume:
+                    type: "Polygon"
+                    coordinates: [[[0,0],[1,0],[1,1],[0,1],[0,0]]]
+                  groundRiskBuffer:
+                    type: "Polygon"
+                    coordinates: [[[0,0],[1,0],[1,1],[0,1],[0,0]]]
+              prefix: "mission"
+              timestamp: "2024-01-01T12:00:00.000Z"
+              calculatedValues:
+                scv: 45.2
+                sgrb: 12.8
+                hcv: 135.0
+                hfg: 100.0
+              dipulCheckActive: true
+              metadata:
+                totalFields: 1
+                hasGrbCvCalculated: true
+                dipulCheckCompleted: true
+      responses:
+        '200':
+          description: Mission package generated successfully
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+              example: |
+                ZIP archive containing:
+                - fields.kml (original field boundaries)
+                - contingency_volumes.kml
+                - ground_risk_buffers.kml
+                - dipul_zones.kml (if DIPUL data available)
+                - mission_data.json (flight parameters and metadata)
+          headers:
+            Content-Disposition:
+              description: Attachment filename
+              schema:
+                type: string
+                example: 'attachment; filename="mission-package.zip"'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Authentik authentication server
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful
+        message:
+          type: string
+          description: Human-readable message
+        data:
+          type: object
+          description: Response data (varies by endpoint)
+      required:
+        - success
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type identifier
+        message:
+          type: string
+          description: Human-readable error message
+      required:
+        - error
+        - message
+
+
+    Geometry:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [ Polygon ]
+          description: GeoJSON geometry type
+        coordinates:
+          type: array
+          description: GeoJSON coordinates array
+          items:
+            type: array
+            items:
+              type: array
+              items:
+                type: number
+      required:
+        - type
+        - coordinates
+
+
+
+    MissionPackageRequest:
+      type: object
+      properties:
+        fields:
+          type: array
+          description: Array of agricultural fields with calculated data
+          items:
+            $ref: '#/components/schemas/MissionField'
+          minItems: 1
+        prefix:
+          type: string
+          description: Prefix for generated filenames
+          example: "mission_alpha"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO timestamp for the generation request
+          example: "2024-01-01T12:00:00.000Z"
+        calculatedValues:
+          $ref: '#/components/schemas/CalculatedValues'
+        dipulCheckActive:
+          type: boolean
+          description: Whether DIPUL checking was enabled
+          example: true
+        metadata:
+          $ref: '#/components/schemas/MissionMetadata'
+      required:
+        - fields
+        - prefix
+        - timestamp
+        - calculatedValues
+        - dipulCheckActive
+        - metadata
+
+    MissionField:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the agricultural field
+          maxLength: 254
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+        dipulZones:
+          type: array
+          description: DIPUL restriction zones intersecting this field
+          items:
+            $ref: '#/components/schemas/DipulZone'
+        groundRiskBuffer:
+          $ref: '#/components/schemas/Geometry'
+        contingencyVolume:
+          $ref: '#/components/schemas/Geometry'
+
+
+
+    DipulZone:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the DIPUL zone
+        properties:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Display name of the zone
+            type_code:
+              type: string
+              description: Type classification code
+            lower_limit_unit:
+              type: string
+              description: Units for altitude limits
+            lower_limit_alt_ref:
+              type: string
+              description: Altitude reference system
+            lower_limit_altitude:
+              type: string
+              description: Lower altitude limit
+            legal_ref:
+              type: string
+              description: Legal reference or regulation
+            external_reference:
+              type: string
+              description: External reference identifier
+          required:
+            - type_code
+      required:
+        - id
+        - properties
+
+    CalculatedValues:
+      type: object
+      properties:
+        scv:
+          type: number
+          format: float
+          description: Horizontal contingency volume distance in meters
+          example: 45.2
+        sgrb:
+          type: number
+          format: float
+          description: Ground risk buffer distance in meters
+          example: 12.8
+        hcv:
+          type: number
+          format: float
+          description: Vertical contingency volume height in meters
+          example: 135.0
+        hfg:
+          type: number
+          format: float
+          description: Flight geography height in meters
+          example: 100.0
+      required:
+        - scv
+        - sgrb
+        - hcv
+        - hfg
+
+    MissionMetadata:
+      type: object
+      properties:
+        totalFields:
+          type: integer
+          description: Total number of fields in the mission
+          minimum: 1
+          example: 3
+        hasGrbCvCalculated:
+          type: boolean
+          description: Whether GRB/CV values were calculated
+          example: true
+        dipulCheckCompleted:
+          type: boolean
+          description: Whether DIPUL checking was completed
+          example: true
+      required:
+        - totalFields
+        - hasGrbCvCalculated
+        - dipulCheckCompleted
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            emptyFields:
+              summary: Empty fields array
+              value:
+                error: "Invalid field data"
+                message: "Fields array is required"
+            invalidVelocity:
+              summary: Invalid velocity
+              value:
+                error: "Invalid parameters"
+                message: "V0 (velocity) must be greater than 0"
+            invalidDimension:
+              summary: Invalid characteristic dimension
+              value:
+                error: "Invalid parameters"
+                message: "Characteristic dimension must be greater than 0"
+            invalidHeight:
+              summary: Invalid flight height
+              value:
+                error: "Invalid parameters"
+                message: "Flight height must be greater than 0"
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Authentication required"
+            message: "Please log in to access this feature"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            shapefileGeneration:
+              summary: Shapefile generation failed
+              value:
+                error: "Generation failed"
+                message: "Unable to generate files"
+            kmlGeneration:
+              summary: KML generation failed
+              value:
+                error: "Generation failed"
+                message: "Unable to generate KML files"
+
+tags:
+  - name: Health
+    description: Server health monitoring
