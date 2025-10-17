@@ -15,7 +15,8 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 
 # Copy entrypoint script and template
-COPY --from=builder /app/index.html.template /usr/share/nginx/html/index.html.template
+# The dist/index.html already contains runtime config placeholders injected by build script
+COPY --from=builder /app/dist/index.html /usr/share/nginx/html/index.html.template
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
