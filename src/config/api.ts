@@ -1,6 +1,6 @@
 // API Configuration - reads from runtime config injected by entrypoint.sh
 export const API_CONFIG = {
-  BASE_URL: (typeof window !== 'undefined' && window.config?.baseUrl) || 'https://ag.bury.local',
+  BASE_URL: (typeof window !== 'undefined' && window.config?.baseUrl) || 'DEFAULT_API_URL',
   ENDPOINTS: {
     MISSION_PACKAGE: '/api/v1/mission-package'
   }
@@ -11,6 +11,7 @@ declare global {
   interface Window {
     config?: {
       baseUrl?: string;
+      clientId?: string;
       googleMaps?: {
         apiKey?: string;
         mapId?: string;
@@ -31,7 +32,7 @@ export const GOOGLE_MAPS_CONFIG = {
 export const AUTHENTIK_CONFIG = {
   // Using path-based routing through NPM - all under same domain
   AUTHORITY: `${API_CONFIG.BASE_URL}/auth/application/o/agrar-drohnenkarte/`,
-  CLIENT_ID: 'VdMCo11sWPUpjGOoC3UgNyS83skFvvYimrdcTEj5',
+  CLIENT_ID: (typeof window !== 'undefined' && window.config?.clientId) || 'DEFAULT_CLIENT_ID',
   // All callbacks redirect to the same domain root
   get REDIRECT_URI() { return `${API_CONFIG.BASE_URL}/` },
   get POST_LOGOUT_REDIRECT_URI() { return `${API_CONFIG.BASE_URL}/` },
