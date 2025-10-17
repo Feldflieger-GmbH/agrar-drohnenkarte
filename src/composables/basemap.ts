@@ -9,7 +9,7 @@ import Map from 'ol/Map.js';
 import {Attribution} from "ol/control";
 import View from "ol/View";
 import {dipulWmsLayer} from "./dipulLayers.ts";
-import { GOOGLE_MAPS_CONFIG } from "../config/api.ts";
+import { GOOGLE_MAPS_CONFIG, MAPBOX_CONFIG } from "../config/api.ts";
 
 interface basemaps {
     name: string
@@ -38,6 +38,19 @@ export const basemapList: basemaps[] = [
             source: new XYZ({
                 url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 attributions: "Powered by <a href='https://www.esri.com/en-us/home' target='_blank'>Esri</a>. Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+            })
+        })
+    },
+    {
+        name: "mapbox-satellite",
+        label: "Satellit (Mapbox HD)",
+        requiresGroup: "agmap.feature.maps",
+        layer: () => new TileLayer({
+            source: new XYZ({
+                url: `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_CONFIG.API_KEY}`,
+                tileSize: 512,
+                maxZoom: 22,
+                attributions: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             })
         })
     },

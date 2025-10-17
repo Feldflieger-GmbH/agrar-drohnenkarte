@@ -27,6 +27,9 @@ const runtimeConfigScript = `
             googleMaps: {
                 apiKey: '\${GOOGLE_MAPS_API_KEY}',
                 mapId: '\${GOOGLE_MAPS_MAP_ID}'
+            },
+            mapbox: {
+                apiKey: '\${MAPBOX_API_KEY}'
             }
         };
     </script>

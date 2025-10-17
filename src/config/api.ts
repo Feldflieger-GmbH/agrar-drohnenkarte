@@ -16,6 +16,9 @@ declare global {
         apiKey?: string;
         mapId?: string;
       };
+      mapbox?: {
+        apiKey?: string;
+      };
     };
   }
 }
@@ -26,6 +29,12 @@ export const GOOGLE_MAPS_CONFIG = {
   API_KEY: (typeof window !== 'undefined' && window.config?.googleMaps?.apiKey) || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
   // Map ID is optional but recommended for advanced styling
   MAP_ID: (typeof window !== 'undefined' && window.config?.googleMaps?.mapId) || import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || ''
+} as const;
+
+// Mapbox Configuration - reads from runtime config injected by entrypoint.sh
+export const MAPBOX_CONFIG = {
+  // Get API key from runtime config or fallback to build-time env variable
+  API_KEY: (typeof window !== 'undefined' && window.config?.mapbox?.apiKey) || import.meta.env.VITE_MAPBOX_API_KEY || ''
 } as const;
 
 // Authentik Configuration
