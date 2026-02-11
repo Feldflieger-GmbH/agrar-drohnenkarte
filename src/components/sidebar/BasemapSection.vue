@@ -138,20 +138,17 @@ import { basemapList, baseOpacity, changeBasemap, selectedBasemap } from "../../
 import { dipulLayerGroups, dipulLayerUI, dipulOpacity, toggleLayer } from "../../composables/dipulLayers.ts"
 import { geoBWLayerGroups, geobwOpacity, toggleGeoBWLayer } from "../../composables/geoBWLayer.ts"
 import SidebarSection from "./SidebarSection.vue"
-import { auth } from "../../composables/authentication"
+import { isPremium } from "../../composables/authentication"
 
 const geoBWLayerUI = ref(false)
 
-// Filter basemap list based on user group access
+// Filter basemap list based on premium access
 const availableBasemaps = computed(() => {
   return basemapList.filter(basemap => {
-    // If no group required, always show
     if (!basemap.requiresGroup) {
       return true
     }
-
-    // Check if user has the required group
-    return auth.hasGroup(basemap.requiresGroup)
+    return isPremium.value
   })
 })
 </script>

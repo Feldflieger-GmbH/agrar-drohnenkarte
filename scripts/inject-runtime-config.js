@@ -23,7 +23,7 @@ const runtimeConfigScript = `
     <script>
         window.config = {
             baseUrl: '\${BASE_URL}',
-            clientId: '\${CLIENT_ID}',
+            premium: '\${PREMIUM}',
             googleMaps: {
                 apiKey: '\${GOOGLE_MAPS_API_KEY}',
                 mapId: '\${GOOGLE_MAPS_MAP_ID}'

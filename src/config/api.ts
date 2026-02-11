@@ -11,7 +11,7 @@ declare global {
   interface Window {
     config?: {
       baseUrl?: string;
-      clientId?: string;
+      premium?: boolean | string;
       googleMaps?: {
         apiKey?: string;
         mapId?: string;
@@ -37,41 +37,7 @@ export const MAPBOX_CONFIG = {
   API_KEY: (typeof window !== 'undefined' && window.config?.mapbox?.apiKey) || import.meta.env.VITE_MAPBOX_API_KEY || ''
 } as const;
 
-// Authentik Configuration
-export const AUTHENTIK_CONFIG = {
-  // Using path-based routing through NPM - all under same domain
-  AUTHORITY: `${API_CONFIG.BASE_URL}/auth/application/o/agrar-drohnenkarte/`,
-  CLIENT_ID: (typeof window !== 'undefined' && window.config?.clientId) || 'DEFAULT_CLIENT_ID',
-  // All callbacks redirect to the same domain root
-  get REDIRECT_URI() { return `${API_CONFIG.BASE_URL}/` },
-  get POST_LOGOUT_REDIRECT_URI() { return `${API_CONFIG.BASE_URL}/` },
-  get SILENT_REDIRECT_URI() { return `${API_CONFIG.BASE_URL}/` }
-} as const;
-
 // Helper function to build full API URLs
 export function getApiUrl(endpoint: keyof typeof API_CONFIG.ENDPOINTS): string {
   return `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS[endpoint]}`;
-}
-
-// Helper function to make authenticated API requests
-export async function makeAuthenticatedRequest(
-  url: string, 
-  options: RequestInit = {},
-  accessToken?: string
-): Promise<Response> {
-  const headers = new Headers(options.headers);
-  
-  // Add Authorization header if access token is provided
-  if (accessToken) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
-  }
-  
-  // Always include credentials for cookie-based auth fallback
-  const requestOptions: RequestInit = {
-    ...options,
-    headers,
-    credentials: 'include'
-  };
-  
-  return fetch(url, requestOptions);
 }

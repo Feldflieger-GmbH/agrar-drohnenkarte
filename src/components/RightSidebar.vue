@@ -9,7 +9,6 @@
       <OptimizationSection />
       <ExportSection />
       <FieldListSection />
-      <Authenticated />
     </div>
   </aside>
 </template>
@@ -23,7 +22,6 @@ import DipulCheckSection from "./sidebar/DipulCheckSection.vue"
 import OptimizationSection from "./sidebar/OptimizationSection.vue"
 import ExportSection from "./sidebar/ExportSection.vue"
 import FieldListSection from "./sidebar/FieldListSection.vue"
-import Authenticated from "./sidebar/Authenticated.vue";
 
 onMounted(() => {
   console.log("RightSidebar mounted")

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-02-11
+
+### Removed
+- OIDC authentication via Authentik (oidc-client-ts dependency removed)
+- Login/logout UI (`Authenticated.vue` sidebar section)
+- Mission files download feature
+- `makeAuthenticatedRequest` helper and `AUTHENTIK_CONFIG`
+
+### Added
+- `PREMIUM` environment variable to gate premium features (Google Maps, Mapbox basemaps)
+- `isPremium` computed export in `authentication.ts` composable
+
+### Changed
+- Basemap access now controlled by `PREMIUM` env var instead of Authentik group membership
+- Runtime config injection updated: `CLIENT_ID` replaced with `PREMIUM`
+
 ## [0.3.0] - 2025-08-05
 
 ### Added
